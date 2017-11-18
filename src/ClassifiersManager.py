@@ -5,6 +5,7 @@ import numpy as np
 import pickle
 import pylru
 import random
+import sys
 from argparse import ArgumentParser
 from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import cohen_kappa_score
@@ -15,8 +16,10 @@ __author__ = 'aishwarya'
 
 
 class ClassifiersManager:
+    # Maintain separately a beam of the bottom-k kappas (k worst classifiers)
     def __init__(self, feature_dict, classifiers_dir, kappas_dir, labels_dir,
-                 classifiers_cache_size, kappas_cache_size, labels_cache_size):
+                 classifiers_cache_size, kappas_cache_size, labels_cache_size,
+                 kappas_beam_size):
         self.feature_dict = feature_dict
 
         # Create LRU caches for accessing classifiers, labels and kappas
@@ -25,6 +28,9 @@ class ClassifiersManager:
 
         kappas_dict = KeyedFileDict(kappas_dir)
         self.kappas = pylru.WriteThroughCacheManager(kappas_dict, kappas_cache_size)
+        self.kappas_beam_size = kappas_beam_size
+        self.kappas_beam = dict()
+        self.highest_kappa_in_beam = -sys.maxint
 
         labels_dict = KeyedFileDict(labels_dir)
         self.labels = pylru.WriteThroughCacheManager(labels_dict, labels_cache_size)
@@ -103,7 +109,43 @@ class ClassifiersManager:
             preds = classifier.predict(features)
 
             # Compute Kappa and normalize to 0-1
-            self.kappas[predicate] = (cohen_kappa_score(labels, preds) + 1.0) / 2.0
+            kappa = (cohen_kappa_score(labels, preds) + 1.0) / 2.0
+            self.kappas[predicate] = kappa
+
+            # See if the beam needs to be updated
+            if predicate in self.kappas_beam:
+                # This was in the beam before
+                if kappa > self.highest_kappa_in_beam:
+                    # The beam should have k lowest Kappas. The new kappa value for this classifier went above the
+                    # largest value in the beam so it is possible that some other classifier should be in the beam
+                    min_kappa = kappa
+                    min_kappa_predicate = predicate
+                    for other_predicate in self.kappas:
+                        if self.kappas[other_predicate] < min_kappa:
+                            min_kappa = self.kappas[other_predicate]
+                            min_kappa_predicate = other_predicate
+                    self.kappas_beam[min_kappa_predicate] = min_kappa
+                else:
+                    self.kappas_beam[predicate] = kappa
+            else:
+                if len(self.kappas_beam.keys()) < self.kappas_beam_size:
+                    self.kappas_beam[predicate] = kappa
+                elif kappa < self.highest_kappa_in_beam:
+                    # Something in the beam needs to be thrown out
+                    predicate_to_remove = [p for p in self.kappas_beam.keys()
+                                           if self.kappas_beam[p] == self.highest_kappa_in_beam]
+                    del self.kappas_beam[predicate_to_remove]
+                    self.kappas_beam[predicate] = kappa
+                elif kappa == self.highest_kappa_in_beam:
+                    # If this competes for the end of the beam, sample uniformly to decide whether to replace a
+                    # predicate with the same kappa with this one
+                    comparable_predicates = [(p, k) for (p, k) in self.kappas_beam.items() if k == self.highest_kappa_in_beam]
+                    comparable_predicates.append((predicate, kappa))
+                    (predicate_not_selected, kappa_not_selected) = random.choice(comparable_predicates)
+                    if predicate_not_selected in self.kappas_beam:
+                        del self.kappas_beam[predicate_not_selected]
+                        self.kappas_beam[predicate] = kappa
+                # If none of the above conditions hold, this predicate doesn't need to be in the beam
 
 
 if __name__ == '__main__':
