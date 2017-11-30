@@ -1,12 +1,10 @@
 #!/usr/bin/python
 # This is used to create a dictionary like interface, for region features
+# DO NOT PICKLE AN INSTANCE oF THIS!!!
 
 import os
 import numpy as np
 import math
-import pylru
-import pickle
-from argparse import ArgumentParser
 
 __author__ = 'aishwarya'
 
@@ -58,32 +56,3 @@ class VGFeaturesDict:
             keys = self.all_regions[batch_num * self.batch_size:batch_num * (self.batch_size + 1)]
             items += zip(keys, features.tolist())
         return items
-
-
-if __name__ == '__main__':
-    # Instantiates a cached feature manager ans saves it as a pickle
-    arg_parser = ArgumentParser()
-
-    arg_parser.add_argument('--dataset-dir', type=str, required=True,
-                            help='Path to Visual Genome dataset')
-    arg_parser.add_argument('--testing', action="store_true", default=False,
-                            help='Set this flag at test time')
-    arg_parser.add_argument('--batch-size', type=int, default=65536,
-                            help='Number of data points per features file')
-    arg_parser.add_argument('--features-cache-size', type=int, default=65536,
-                            help='Max number of features to be cached')
-    args = arg_parser.parse_args()
-
-    all_regions = None
-    if not args.testing:
-        regions_filename = os.path.join(args.dataset_dir, 'classifiers/data/train_regions.txt')
-    else:
-        regions_filename = os.path.join(args.dataset_dir, 'classifiers/data/test_regions.txt')
-    with open(regions_filename) as regions_file:
-        all_regions = regions_file.read().split('\n')
-
-    features_dict = VGFeaturesDict(args.dataset_dir, all_regions, args.batch_size)
-    features_cache = pylru.WriteBackCacheManager(features_dict, args.features_cache_size)
-
-    with open(args.save_file, 'wb') as save_file:
-        pickle.dump(features_cache, save_file)
