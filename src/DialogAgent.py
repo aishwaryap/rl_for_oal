@@ -34,6 +34,9 @@ class DialogAgent:
         else:
             self.predicates_with_classifiers = list()
 
+        self.predicates_without_classifiers = list(set(self.seen_predicates).difference(
+                                                   self.predicates_with_classifiers))
+
         # Fields to maintain dialog state
         self.candidate_regions = None       # Regions under discussion
         self.description = None             # Description to understand
@@ -44,12 +47,21 @@ class DialogAgent:
 
         # Caching things useful within a dialog
         self.candidate_regions_features = None  # Features of candidate regions
+        self.candidate_regions_nbrs = None      # Nearest neighbours of candidate regions
+        self.candidate_regions_densities = None # Densities of candidate regions
         self.region_contents = None             # Objects and attributes in candidate regions
         self.classifiers_modified = None        # Classifiers that have been modified within this dialog (optimization)
 
         # Labels acquired (within dialog)
         # This is a dict with label name as key, and (region_id, 0/1 label value) as value
         self.labels_acquired = None
+
+        # Some cross dialog stats that the agent accumulates over time
+        self.num_dialogs_completed = 0
+        self.num_dialogs_successful = 0
+        self.total_num_system_turns = 0     # Number of system turns across all dialogs
+        self.predicate_uses = dict()        # Number of times a predicate has occurred in target descriptions
+        self.predicate_successes = dict()   # Number of successful dialogs per predicate in target descriptions
 
         self.log_file = None
         if log_filename is not None:
@@ -71,11 +83,16 @@ class DialogAgent:
         self.seen_predicates += self.current_predicates
 
         self.candidate_regions_features = dict()
+        self.candidate_regions_densities = dict()
+        self.candidate_regions_nbrs = dict()
         for region in self.candidate_regions:
             self.candidate_regions_features[region] = self.classifier_manager.features_dict[region]
+            self.candidate_regions_densities[region] = self.classifier_manager.densities[region]
+            self.candidate_regions_nbrs[region] = self.classifier_manager.nbrs[region]
+
         self.classifiers_modified = self.current_predicates
         self.decisions = dict()
-        self.update_decision_scores()
+        self.get_decision_scores()
 
         self.labels_acquired = dict()
         self.classifiers_modified = list()
@@ -88,16 +105,20 @@ class DialogAgent:
         self.current_predicates = None
         self.num_system_turns = None
         self.candidate_regions_features = None
+        self.candidate_regions_densities = None
+        self.candidate_regions_nbrs = None
         self.region_contents = None
         self.labels_acquired = None
         self.classifiers_modified = None
 
-    def update_decision_scores(self):
-        predicates_to_update = set(self.current_predicates).intersection(self.classifiers_modified)
-        for predicate in predicates_to_update:
+    def update_decision_score(self, predicate):
+        decisions = self.classifier_manager.get_decisions(predicate, self.candidate_regions_features)
+        self.decisions[predicate] = decisions
+
+    def get_decision_scores(self):
+        for predicate in self.current_predicates:
             decisions = self.classifier_manager.get_decisions(predicate, self.candidate_regions_features)
             self.decisions[predicate] = decisions
-        self.classifiers_modified = list()
 
     # Simulate the process of asking for an example
     def ask_positive_example(self, predicate):
@@ -129,9 +150,11 @@ class DialogAgent:
 
         self.classifier_manager.update_classifier(predicate, labels_acquired)
         self.classifier_manager.update_kappa(predicate)
-        self.classifiers_modified.append(predicate)
-        self.predicates_with_classifiers.append(predicate)
-        self.update_decision_scores()
+        self.update_decision_score(predicate)
+
+        if predicate not in self.predicates_with_classifiers:
+            self.predicates_with_classifiers.append(predicate)
+            self.predicates_without_classifiers.remove(predicate)
 
     # Simulate the process of asking for a predicate for a region
     def ask_label(self, predicate, region):
@@ -147,8 +170,11 @@ class DialogAgent:
 
         self.classifier_manager.update_classifier(predicate, labels_acquired)
         self.classifier_manager.update_kappa(predicate)
-        self.predicates_with_classifiers.append(predicate)
-        self.update_decision_scores()
+        self.update_decision_score(predicate)
+
+        if predicate not in self.predicates_with_classifiers:
+            self.predicates_with_classifiers.append(predicate)
+            self.predicates_without_classifiers.remove(predicate)
 
     def get_dialog_state(self):
         dialog_state = dict()
@@ -157,14 +183,35 @@ class DialogAgent:
         dialog_state['current_predicates'] = self.current_predicates
         dialog_state['candidate_regions'] = self.candidate_regions
         dialog_state['target_region'] = self.target_region
-        dialog_state['all_kappas'] = self.classifier_manager.kappas
         dialog_state['current_kappas'] = dict()
         for predicate in self.current_predicates:
             dialog_state['current_kappas'] = self.classifier_manager.get_kappa(predicate)
         dialog_state['labels_acquired'] = copy.deepcopy(self.labels_acquired)
-        dialog_state['predicates_without_classifiers'] = [predicate for predicate in self.seen_predicates
-                                                          if predicate not in self.predicates_with_classifiers]
+        dialog_state['predicates_without_classifiers'] = self.predicates_without_classifiers
+        dialog_state['candidate_regions_features'] = self.candidate_regions_features
+        dialog_state['candidate_regions_densities'] = self.candidate_regions_densities
+        dialog_state['candidate_regions_nbrs'] = self.candidate_regions_nbrs
+        dialog_state['num_dialogs_completed'] = self.num_dialogs_completed
+        dialog_state['num_dialogs_successful'] = self.num_dialogs_successful
+        dialog_state['predicate_uses'] = self.predicate_uses
+        dialog_state['predicate_successes'] = self.predicate_successes
         return dialog_state
+
+    def update_cross_dialog_stats(self, dialog_stats):
+        self.num_dialogs_completed += 1
+        self.num_dialogs_successful += int(dialog_stats['success'])
+        self.total_num_system_turns += dialog_stats['num_system_turns']
+        for predicate in self.current_predicates:
+            if predicate not in self.predicate_uses:
+                self.predicate_uses[predicate] = 1
+            else:
+                self.predicate_uses[predicate] += 1
+        if dialog_stats['success']:
+            for predicate in self.current_predicates:
+                if predicate not in self.predicate_uses:
+                    self.predicate_successes[predicate] = 1
+                else:
+                    self.predicate_successes[predicate] += 1
 
     def run_dialog(self, candidate_regions, target_region, description, region_contents):
         start_time = datetime.now()
@@ -262,6 +309,7 @@ if __name__ == '__main__':
     with open(args.policy_file, 'rb') as policy_file:
         loaded_policy = pickle.load(policy_file)
 
+    # Needs to be instantiated without a classifier manager to be pickled
     dialog_agent = DialogAgent(args.agent_name, None, loaded_policy, args.seen_predicates_file,
                                args.predicates_with_classifiers_file, args.log_filename)
 

@@ -9,7 +9,7 @@ import math
 import pickle
 import pylru
 from argparse import ArgumentParser
-from VGFeaturesDict import VGFeaturesDict
+from RegionDict import RegionDict
 from ClassifiersManager import ClassifiersManager
 
 __author__ = 'aishwarya'
@@ -28,18 +28,18 @@ class ExperimentRunner:
         self.std_dev_regions = std_dev_regions
 
         self.all_regions = None
-        if not self.testing:
-            regions_filename = os.path.join(self.dataset_dir, 'classifiers/data/train_regions.txt')
-        else:
+        if self.testing:
             regions_filename = os.path.join(self.dataset_dir, 'classifiers/data/test_regions.txt')
+        else:
+            regions_filename = os.path.join(self.dataset_dir, 'classifiers/data/train_regions.txt')
         with open(regions_filename) as regions_file:
             self.all_regions = regions_file.read().split('\n')
 
+        # Load region contents
         region_contents_files = [
             os.path.join(self.dataset_dir, 'region_objects_unique.csv'),
             os.path.join(self.dataset_dir, 'region_attributes_unique.csv')
         ]
-
         self.region_contents = dict()
         for region in self.all_regions:
             self.region_contents[region] = list()
@@ -52,6 +52,7 @@ class ExperimentRunner:
                     self.region_contents[region_id] += row[1:]
             file_handle.close()
 
+        # Load region descriptions
         region_descriptions_filename = os.path.join(self.dataset_dir, 'region_descriptions.csv')
         self.region_descriptions = dict()
         with open(region_descriptions_filename) as handle:
@@ -65,10 +66,10 @@ class ExperimentRunner:
 
     def sample_domain_of_discourse(self):
         # Sample number of regions from a truncated Gaussian
-        num_regions = math.floor(scipy.stats.truncnorm.rvs(
+        num_regions = int(math.floor(scipy.stats.truncnorm.rvs(
             (self.min_regions - self.mean_regions) / self.std_dev_regions,
             (self.max_regions - self.mean_regions) / self.std_dev_regions,
-            loc=self.mean_regions, scale=self.std_dev_regions, size=1))
+            loc=self.mean_regions, scale=self.std_dev_regions, size=1)))
 
         # Sample num_regions uniformly without replacement
         regions = np.random.choice(self.all_regions, num_regions)
@@ -140,13 +141,31 @@ if __name__ == '__main__':
     experiment_runner = ExperimentRunner(args.dataset_dir, args.dialog_stats_filename, args.testing, args.min_regions,
                                          args.max_regions, args.mean_regions, args.std_dev_regions)
 
-    # Instantiate regions feature dict (because this can't be pickled)
-    features_dict = VGFeaturesDict(args.dataset_dir, experiment_runner.all_regions, args.batch_size)
+    # Instantiate region dicts (because this can't be pickled)
+    if args.testing:
+        features_dir = 'classifiers/data/features/test/'
+        densities_dir = 'densities/test/'
+        nbrs_dir = 'nbrs/test/'
+    else:
+        features_dir = 'classifiers/data/features/train/'
+        densities_dir = 'densities/train/'
+        nbrs_dir = 'nbrs/train/'
+
+    features_dict = RegionDict(args.dataset_dir, features_dir, experiment_runner.all_regions, args.batch_size,
+                               loading_mode='numpy')
     features_cache = pylru.WriteBackCacheManager(features_dict, args.features_cache_size)
+
+    densities_dict = RegionDict(args.dataset_dir, densities_dir, experiment_runner.all_regions, args.batch_size,
+                                loading_mode='numpy')
+    densities = dict(densities_dict.items())
+
+    nbrs_dict = RegionDict(args.dataset_dir, nbrs_dir, experiment_runner.all_regions, args.batch_size,
+                           loading_mode='literal_eval')
+    nbrs = dict(nbrs_dict.items())
 
     # Instantiate classifier manager
     classifiers_manager = ClassifiersManager(features_cache, args.classifiers_dir, args.kappas_file, args.labels_dir,
-                                             args.classifiers_cache_size, args.labels_cache_size)
+                                             densities, nbrs, args.classifiers_cache_size, args.labels_cache_size)
 
     # Load dialog agent
     with open(args.agent_file, 'rb') as agent_file:

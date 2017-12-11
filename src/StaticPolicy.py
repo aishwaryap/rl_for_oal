@@ -36,21 +36,17 @@ class StaticPolicy(AbstractPolicy):
     # Returns True if asking a yes-no question is currently a valid action
     def yes_no_valid(self, dialog_state):
         if self.on_topic:
-            kappas = [kappa for (predicate, kappa) in dialog_state['all_kappas'].items()
+            kappas = [kappa for (predicate, kappa) in self.classifier_manager.kappas.items()
                       if predicate in dialog_state['current_predicates']]
         else:
-            kappas = [kappa for (predicate, kappa) in dialog_state['all_kappas'].items()]
+            kappas = [kappa for (predicate, kappa) in self.classifier_manager.kappas.items()]
         num_candidates = len(kappas) + len(dialog_state['predicates_without_classifiers'])
         avg_kappa = sum(kappas) / float(num_candidates)
         return avg_kappa < self.max_avg_kappa
 
     def get_next_action(self, dialog_state):
-        next_action = dict()
-
         if dialog_state['num_dialog_turns'] >= self.max_questions:
-            next_action['action'] = 'make_guess'
-            next_action['guess'] = self.get_guess(dialog_state)
-            return next_action
+            next_action = self.get_guess(dialog_state)
 
         else:
             ask_example_valid = self.ask_example_valid(dialog_state)
@@ -59,25 +55,17 @@ class StaticPolicy(AbstractPolicy):
             if ask_example_valid and yes_no_valid:
                 r = random.random()
                 if r <= self.yes_no_prob:
-                    next_action['action'] = 'ask_label'
-                    next_action['predicate'], next_action['region'] = self.get_label_question(dialog_state)
-                    return next_action
+                    next_action = self.get_label_question_candidates(dialog_state, beam_size=1)[0]
                 else:
-                    next_action['action'] = 'ask_positive_example'
-                    next_action['predicate'] = self.get_predicate_for_example(dialog_state)
-                    return next_action
+                    next_action = self.get_example_question_candidates(dialog_state, beam_size=1)[0]
             elif ask_example_valid:
-                next_action['action'] = 'ask_positive_example'
-                next_action['predicate'] = self.get_predicate_for_example(dialog_state)
-                return next_action
+                next_action = self.get_example_question_candidates(dialog_state, beam_size=1)[0]
             elif yes_no_valid:
-                next_action['action'] = 'ask_label'
-                next_action['predicate'], next_action['region'] = self.get_label_question(dialog_state)
-                return next_action
+                next_action = self.get_label_question_candidates(dialog_state, beam_size=1)[0]
             else:
-                next_action['action'] = 'make_guess'
-                next_action['guess'] = self.get_guess(dialog_state)
-                return next_action
+                next_action = self.get_guess(dialog_state)
+
+        return next_action
 
 
 if __name__ == '__main__':
