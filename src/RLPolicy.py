@@ -2,19 +2,21 @@
 # Basic structure of a policy, and some default functionality
 
 import numpy as np
+import pickle
 from sklearn.neural_network import MLPRegressor
 from sklearn.linear_model import SGDRegressor
 from GuessPredictor import GuessPredictor
 from AbstractPolicy import AbstractPolicy
+from argparse import ArgumentParser
 
 __author__ = 'aishwarya'
 
 
 class RLPolicy(AbstractPolicy):
     # This should have the same classifier manager as the dialog agent
-    def __init__(self, on_topic, classifier_manager, model_type, separate_guess_predictor, gamma,
+    def __init__(self, save_file, on_topic, classifier_manager, model_type, separate_guess_predictor, gamma,
                  candidate_questions_beam_size, initial_guess_predictor=None):
-        super(RLPolicy, self).__init__(on_topic, classifier_manager)
+        super(RLPolicy, self).__init__(save_file, on_topic, classifier_manager)
 
         self.gamma = gamma
         self.candidate_questions_beam_size = candidate_questions_beam_size
@@ -122,3 +124,34 @@ class RLPolicy(AbstractPolicy):
         self.stored_action = next_state_candidate_actions[max_q_idx]
         target_q = reward + self.gamma * max_q
         self.q.partial_fit([self.get_features(prev_dialog_state, next_action)], [target_q])
+
+
+if __name__ == '__main__':
+    # Instantiates a static policy and saves it as a pickle
+    arg_parser = ArgumentParser()
+
+    arg_parser.add_argument('--model-type', type=str, required=True,
+                            help='"mlp" or "linear"')
+    arg_parser.add_argument('--separate-guess-predictor', action="store_true", default=False,
+                            help='Add this flag if a separate guess predictor is present')
+    arg_parser.add_argument('--guess-predictor-file', type=str, default=None,
+                            help='File with pickled guess predictor')
+    arg_parser.add_argument('--gamma', type=float, default=0.9,
+                            help='Gamma for Q learning update')
+    arg_parser.add_argument('--candidate-questions-beam-size', type=int, default=None,
+                            help='Add this argument to limit number of questions considered to some integer')
+    arg_parser.add_argument('--on-topic', action="store_true", default=False,
+                            help='Ask only on topic questions')
+    arg_parser.add_argument('--save-file', type=str, required=True,
+                            help='File to save pickled policy')
+
+    args = arg_parser.parse_args()
+
+    initial_guess_predictor = None
+    if args.guess_predictor_file is not None:
+        with open(args.guess_predictor_file, 'rb') as handle:
+            initial_guess_predictor = pickle.load(handle)
+
+    policy = RLPolicy(args.save_file, args.on_topic, None, args.model_type, args.separate_guess_predictor,
+                      args.gamma, args.candidate_questions_beam_size, initial_guess_predictor)
+    policy.save()

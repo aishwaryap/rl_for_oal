@@ -133,7 +133,7 @@ if __name__ == '__main__':
     # Agent file and num dialogs for test (this may have to be modified)
     arg_parser.add_argument('--agent-file', type=str, required=True,
                             help='File with pickled agent')
-    arg_parser.add_argument('--num-dialogs', type=int, default=10,
+    arg_parser.add_argument('--num-dialogs', type=int, required=True,
                             help='Num dialogs to run')
 
     args = arg_parser.parse_args()
@@ -171,6 +171,7 @@ if __name__ == '__main__':
     with open(args.agent_file, 'rb') as agent_file:
         dialog_agent = pickle.load(agent_file)
     dialog_agent.classifier_manager = classifiers_manager
+    dialog_agent.policy.classifier_manager = classifiers_manager
 
     experiment_runner.run_experiments(dialog_agent, args.num_dialogs)
     experiment_runner.finish()

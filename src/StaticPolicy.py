@@ -1,9 +1,7 @@
 #!/usr/bin/python
 # Basic structure of a policy, and some default functionality
 
-import numpy as np
 import random
-import pickle
 from AbstractPolicy import AbstractPolicy
 from argparse import ArgumentParser
 
@@ -16,8 +14,8 @@ class StaticPolicy(AbstractPolicy):
     # max_avg_kappa - Ask a yes-no question if average Kappa is below this
     # min_num_unknown_predicates - Min # of unknown predicates to be present to ask for positive label
     # on_topic - True if only on topic questions allowed. Else False
-    def __init__(self, max_questions, yes_no_prob, max_avg_kappa, min_num_unknown_predicates, on_topic):
-        super(StaticPolicy, self).__init__(on_topic)
+    def __init__(self, save_file, max_questions, yes_no_prob, max_avg_kappa, min_num_unknown_predicates, on_topic):
+        super(StaticPolicy, self).__init__(save_file, on_topic, classifier_manager=None)
         self.max_questions = max_questions
         self.yes_no_prob = yes_no_prob
         self.max_avg_kappa = max_avg_kappa
@@ -87,8 +85,6 @@ if __name__ == '__main__':
 
     args = arg_parser.parse_args()
 
-    policy = StaticPolicy(args.max_questions, args.yes_no_prob, args.max_avg_kappa, args.min_num_unknown_predicates,
+    policy = StaticPolicy(args.save_file, args.max_questions, args.yes_no_prob, args.max_avg_kappa, args.min_num_unknown_predicates,
                           args.on_topic)
-
-    with open(args.save_file, 'wb') as save_file:
-        pickle.dump(policy, save_file)
+    policy.save()

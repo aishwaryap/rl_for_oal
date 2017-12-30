@@ -3,14 +3,16 @@
 
 import numpy as np
 import math
+import pickle
 
 __author__ = 'aishwarya'
 
 
 class AbstractPolicy:
-    def __init__(self, on_topic, classifier_manager):
+    def __init__(self, save_file, on_topic, classifier_manager):
         self.on_topic = on_topic
         self.classifier_manager = classifier_manager
+        self.save_file = save_file
 
     def get_guess(self, dialog_state):
         positive_scores = np.zeros(len(dialog_state['candidate_regions']))
@@ -126,3 +128,8 @@ class AbstractPolicy:
     # By default update does nothing
     def update(self, prev_dialog_state, next_action, next_dialog_state, reward):
         pass
+
+    def save(self):
+        self.classifier_manager = None
+        with open(self.save_file, 'wb') as handle:
+            pickle.dump(self, handle)
