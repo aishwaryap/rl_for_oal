@@ -8,7 +8,7 @@ import pickle
 __author__ = 'aishwarya'
 
 
-class AbstractPolicy:
+class AbstractPolicy(object):
     def __init__(self, save_file, on_topic, classifier_manager):
         self.on_topic = on_topic
         self.classifier_manager = classifier_manager

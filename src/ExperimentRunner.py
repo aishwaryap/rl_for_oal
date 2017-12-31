@@ -37,8 +37,8 @@ class ExperimentRunner:
 
         # Load region contents
         region_contents_files = [
-            os.path.join(self.dataset_dir, 'region_objects_unique.csv'),
-            os.path.join(self.dataset_dir, 'region_attributes_unique.csv')
+            os.path.join(self.dataset_dir, 'indoor/region_objects_unique.csv'),
+            os.path.join(self.dataset_dir, 'indoor/region_attributes_unique.csv')
         ]
         self.region_contents = dict()
         for region in self.all_regions:
