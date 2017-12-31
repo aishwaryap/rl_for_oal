@@ -11,6 +11,7 @@ import pylru
 from argparse import ArgumentParser
 from RegionDict import RegionDict
 from ClassifiersManager import ClassifiersManager
+from datetime import datetime
 
 __author__ = 'aishwarya'
 
@@ -94,6 +95,9 @@ class ExperimentRunner:
 
 if __name__ == '__main__':
     # Load relevant components, instantiate an experiment and run it
+
+    prev_time = datetime.now()
+
     arg_parser = ArgumentParser()
 
     arg_parser.add_argument('--dataset-dir', type=str, required=True,
@@ -138,8 +142,16 @@ if __name__ == '__main__':
 
     args = arg_parser.parse_args()
 
+    cur_time = datetime.now()
+    print 'Parsing args: ', str(cur_time - prev_time)
+    prev_time = cur_time
+
     experiment_runner = ExperimentRunner(args.dataset_dir, args.dialog_stats_filename, args.testing, args.min_regions,
                                          args.max_regions, args.mean_regions, args.std_dev_regions)
+
+    cur_time = datetime.now()
+    print 'Instantiating ExperimentRunner: ', str(cur_time - prev_time)
+    prev_time = cur_time
 
     # Instantiate region dicts (because this can't be pickled)
     if args.testing:
@@ -155,17 +167,33 @@ if __name__ == '__main__':
                                loading_mode='numpy')
     features_cache = pylru.WriteBackCacheManager(features_dict, args.features_cache_size)
 
+    cur_time = datetime.now()
+    print 'Instantiating Feature cache: ', str(cur_time - prev_time)
+    prev_time = cur_time
+
     densities_dict = RegionDict(args.dataset_dir, densities_dir, experiment_runner.all_regions, args.batch_size,
                                 loading_mode='numpy')
     densities = dict(densities_dict.items())
+
+    cur_time = datetime.now()
+    print 'Instantiating densities cache: ', str(cur_time - prev_time)
+    prev_time = cur_time
 
     nbrs_dict = RegionDict(args.dataset_dir, nbrs_dir, experiment_runner.all_regions, args.batch_size,
                            loading_mode='literal_eval')
     nbrs = dict(nbrs_dict.items())
 
+    cur_time = datetime.now()
+    print 'Instantiating neighbours cache: ', str(cur_time - prev_time)
+    prev_time = cur_time
+
     # Instantiate classifier manager
     classifiers_manager = ClassifiersManager(features_cache, args.classifiers_dir, args.kappas_file, args.labels_dir,
                                              densities, nbrs, args.classifiers_cache_size, args.labels_cache_size)
+
+    cur_time = datetime.now()
+    print 'Instantiating classifier manager: ', str(cur_time - prev_time)
+    prev_time = cur_time
 
     # Load dialog agent
     with open(args.agent_file, 'rb') as agent_file:
@@ -173,5 +201,14 @@ if __name__ == '__main__':
     dialog_agent.classifier_manager = classifiers_manager
     dialog_agent.policy.classifier_manager = classifiers_manager
 
+    cur_time = datetime.now()
+    print 'Loading dialog agent: ', str(cur_time - prev_time)
+    prev_time = cur_time
+
     experiment_runner.run_experiments(dialog_agent, args.num_dialogs)
+
+    cur_time = datetime.now()
+    print 'Running dialogs: ', str(cur_time - prev_time)
+    prev_time = cur_time
+
     experiment_runner.finish()
