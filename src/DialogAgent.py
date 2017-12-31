@@ -8,6 +8,10 @@ from argparse import ArgumentParser
 from datetime import datetime     # For profiling
 import pickle
 
+# Imports for unpickling
+from StaticPolicy import StaticPolicy
+from RLPolicy import RLPolicy
+
 __author__ = 'aishwarya'
 
 
@@ -63,9 +67,12 @@ class DialogAgent:
         self.predicate_uses = dict()        # Number of times a predicate has occurred in target descriptions
         self.predicate_successes = dict()   # Number of successful dialogs per predicate in target descriptions
 
-        self.log_file = None
-        if log_filename is not None:
-            self.log_file = open(log_filename, 'w')
+        self.log_filename = log_filename
+
+    def log(self, log_str):
+        if self.log_filename is not None:
+            with open(self.log_filename, 'a') as handle:
+                handle.write(log_str + '\n')
 
     # Load things that are required at start of an interaction
     # candidate_regions - List of region IDs (int) of candidate regions
@@ -216,16 +223,14 @@ class DialogAgent:
     def run_dialog(self, candidate_regions, target_region, description, region_contents):
         start_time = datetime.now()
 
-        if self.log_file is not None:
-            self.log_file.write('candidate_regions = ' + str(candidate_regions) + '\n')
-            self.log_file.write('target_region = ' + str(target_region) + '\n')
-            self.log_file.write('description = ' + str(description) + '\n')
-            self.log_file.write('region_contents = ' + str(region_contents) + '\n')
+        self.log('candidate_regions = ' + str(candidate_regions))
+        self.log('target_region = ' + str(target_region))
+        self.log('description = ' + str(description))
+        self.log('region_contents = ' + str(region_contents))
 
         time_before_setup = datetime.now()
         self.setup_task(candidate_regions, description, region_contents, target_region)
-        if self.log_file is not None:
-            self.log_file.write('Time for setup = ' + format(datetime.now() - time_before_setup) + '\n')
+        self.log('Time for setup = ' + format(datetime.now() - time_before_setup))
 
         dialog_complete = False
         dialog_stats = dict()
@@ -264,22 +269,17 @@ class DialogAgent:
 
             self.policy.update(prev_dialog_state, next_action, next_dialog_state)
 
-            if self.log_file is not None:
-                self.log_file.write('Turn ' + str(self.num_system_turns - 1)
-                                    + ' time = ' + format(datetime.now() - turn_start_time) + '\n')
+            self.log('Turn ' + str(self.num_system_turns - 1)
+                     + ' time = ' + format(datetime.now() - turn_start_time))
 
         self.finish_task()
 
-        if self.log_file is not None:
-            self.log_file.write('Dialog time = ' + format(datetime.now() - start_time) + '\n')
-            self.log_file.write('--------------------------------------------------------------\n\n')
+        self.log('Dialog time = ' + format(datetime.now() - start_time))
+        self.log('--------------------------------------------------------------\n')
 
         return dialog_stats
 
     def shutdown(self):
-        if self.log_file is not None:
-            self.log_file.close()
-
         with open(self.seen_predicates_file, 'w') as handle:
             handle.write('\n'.join(self.seen_predicates))
 

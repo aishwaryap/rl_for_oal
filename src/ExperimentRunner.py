@@ -13,6 +13,9 @@ from RegionDict import RegionDict
 from ClassifiersManager import ClassifiersManager
 from datetime import datetime
 
+# Imports for unpickling
+from DialogAgent import DialogAgent
+
 __author__ = 'aishwarya'
 
 
@@ -88,6 +91,7 @@ class ExperimentRunner:
         for i in range(num_dialogs):
             print 'Running experiment', i
             self.run_experiment(agent)
+        agent.shutdown()
 
     def finish(self):
         self.dialog_stats_file.close()
