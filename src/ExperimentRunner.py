@@ -31,6 +31,7 @@ class ExperimentRunner:
         self.mean_regions = mean_regions
         self.std_dev_regions = std_dev_regions
 
+        prev_time = datetime.now()
         self.all_regions = None
         if self.testing:
             regions_filename = os.path.join(self.dataset_dir, 'classifiers/data/test_regions.txt')
@@ -38,6 +39,11 @@ class ExperimentRunner:
             regions_filename = os.path.join(self.dataset_dir, 'classifiers/data/train_regions.txt')
         with open(regions_filename) as regions_file:
             self.all_regions = regions_file.read().split('\n')
+        self.region_set = set(self.all_regions)
+
+        cur_time = datetime.now()
+        print 'Reading regions: ', str(cur_time - prev_time)
+        prev_time = cur_time
 
         # Load region contents
         region_contents_files = [
@@ -52,9 +58,13 @@ class ExperimentRunner:
             reader = csv.reader(file_handle)
             for row in reader:
                 region_id = int(row[0])
-                if region_id in self.all_regions:
+                if region_id in self.region_set:
                     self.region_contents[region_id] += row[1:]
             file_handle.close()
+
+        cur_time = datetime.now()
+        print 'Reading region contents: ', str(cur_time - prev_time)
+        prev_time = cur_time
 
         # Load region descriptions
         region_descriptions_filename = os.path.join(self.dataset_dir, 'region_descriptions.csv')
@@ -63,6 +73,9 @@ class ExperimentRunner:
             reader = csv.reader(handle, delimiter=',')
             for row in reader:
                 self.region_descriptions[row[0]] = row[1]
+
+        cur_time = datetime.now()
+        print 'Reading region descriptions: ', str(cur_time - prev_time)
 
         dialog_stats_header = ['agent_name', 'num_regions', 'success', 'num_system_turns']
         self.dialog_stats_file = open(dialog_stats_filename, 'w')
