@@ -78,6 +78,8 @@ class DialogAgent:
     # candidate_regions - List of region IDs (int) of candidate regions
     # description - Normalized string description of region
     def setup_task(self, candidate_regions, description, region_contents, target_region):
+        prev_time = datetime.now()
+
         self.candidate_regions = candidate_regions
         self.description = description
         self.region_contents = region_contents
@@ -89,13 +91,31 @@ class DialogAgent:
         self.current_predicates = self.description.split('_')
         self.seen_predicates += self.current_predicates
 
+        cur_time = datetime.now()
+        print 'Initial assignments: ' + str(cur_time - prev_time)
+        prev_time = datetime.now()
+
         self.candidate_regions_features = dict()
         self.candidate_regions_densities = dict()
         self.candidate_regions_nbrs = dict()
         for region in self.candidate_regions:
-            self.candidate_regions_features[region] = self.classifier_manager.features_dict[region]
+            iter_prev_time = datetime.now()
+            self.candidate_regions_features[region] = self.classifier_manager.feature_dict[region]
+            iter_cur_time = datetime.now()
+            print '\t\tTime to fetch features = ' + str(iter_cur_time - iter_prev_time)
+            iter_prev_time = datetime.now()
             self.candidate_regions_densities[region] = self.classifier_manager.densities[region]
+            iter_cur_time = datetime.now()
+            print '\t\tTime to fetch density = ' + str(iter_cur_time - iter_prev_time)
+            iter_prev_time = datetime.now()
             self.candidate_regions_nbrs[region] = self.classifier_manager.nbrs[region]
+            iter_cur_time = datetime.now()
+            print '\t\tTime to fetch nbrs = ' + str(iter_cur_time - iter_prev_time)
+            iter_prev_time = datetime.now()
+
+        cur_time = datetime.now()
+        print 'Fetching region properties: ' + str(cur_time - prev_time)
+        prev_time = datetime.now()
 
         self.classifiers_modified = self.current_predicates
         self.decisions = dict()
@@ -103,6 +123,10 @@ class DialogAgent:
 
         self.labels_acquired = dict()
         self.classifiers_modified = list()
+
+        cur_time = datetime.now()
+        print 'Completing setup: ' + str(cur_time - prev_time)
+
 
     def finish_task(self):
         # Precautions to make sure these get reset
@@ -231,6 +255,7 @@ class DialogAgent:
         time_before_setup = datetime.now()
         self.setup_task(candidate_regions, description, region_contents, target_region)
         self.log('Time for setup = ' + format(datetime.now() - time_before_setup))
+        print 'Time for setup = ' + format(datetime.now() - time_before_setup)
 
         dialog_complete = False
         dialog_stats = dict()
@@ -271,6 +296,8 @@ class DialogAgent:
 
             self.log('Turn ' + str(self.num_system_turns - 1)
                      + ' time = ' + format(datetime.now() - turn_start_time))
+            print 'Turn ' + str(self.num_system_turns - 1) \
+                     + ' time = ' + format(datetime.now() - turn_start_time)
 
         self.finish_task()
 

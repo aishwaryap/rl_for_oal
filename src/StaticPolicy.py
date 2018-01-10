@@ -39,11 +39,13 @@ class StaticPolicy(AbstractPolicy):
         else:
             kappas = [kappa for (predicate, kappa) in self.classifier_manager.kappas.items()]
         num_candidates = len(kappas) + len(dialog_state['predicates_without_classifiers'])
+        if num_candidates == 0:
+            return False
         avg_kappa = sum(kappas) / float(num_candidates)
         return avg_kappa < self.max_avg_kappa
 
     def get_next_action(self, dialog_state):
-        if dialog_state['num_dialog_turns'] >= self.max_questions:
+        if dialog_state['num_system_turns'] >= self.max_questions:
             next_action = self.get_guess(dialog_state)
 
         else:

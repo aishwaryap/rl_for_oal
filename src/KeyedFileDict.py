@@ -22,6 +22,8 @@ class KeyedFileDict:
 
     def __getitem__(self, key):
         filename = os.path.join(self.dict_dir, str(key) + '.pkl')
+        if not os.path.isfile(filename):
+            return None
         with open(filename, 'rb') as handle:
             item = pickle.load(handle)
             return item

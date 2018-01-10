@@ -144,12 +144,20 @@ if __name__ == '__main__':
                             help='Path to directory for classifiers')
     arg_parser.add_argument('--kappas-file', type=str, required=True,
                             help='File for kappas')
-    arg_parser.add_argument('--labels-dir', type=str, required=True,
+    arg_parser.add_argument('--train-labels-dir', type=str, required=True,
+                            help='Path to directory for collected labels')
+    arg_parser.add_argument('--val-labels-dir', type=str, required=True,
                             help='Path to directory for collected labels')
     arg_parser.add_argument('--classifiers-cache-size', type=int, default=256,
                             help='Number of classifiers to keep in cache')
     arg_parser.add_argument('--labels-cache-size', type=int, default=65536,
                             help='Number of labels to keep in cache')
+    arg_parser.add_argument('--min-labels-before-val-set', type=int, default=10,
+                            help='Min labels to be acquired before separate train and val sets are made')
+    arg_parser.add_argument('--val-label-fraction', type=float, default=0.2,
+                            help='Fraction of labels to be used for validation')
+    arg_parser.add_argument('--max-labels-in-val-set', type=int, default=1000,
+                            help='Max val set size')
 
     # Agent file and num dialogs for test (this may have to be modified)
     arg_parser.add_argument('--agent-file', type=str, required=True,
@@ -180,23 +188,26 @@ if __name__ == '__main__':
         densities_dir = 'densities/train/'
         nbrs_dir = 'nbrs/train/'
 
-    features_dict = RegionDict(args.dataset_dir, features_dir, experiment_runner.all_regions, args.batch_size,
-                               loading_mode='numpy')
+    features_dict = RegionDict(args.dataset_dir, features_dir, experiment_runner.all_regions, args.regions_batch_size,
+                               loading_mode='numpy', delimiter=',')
     features_cache = pylru.WriteBackCacheManager(features_dict, args.features_cache_size)
 
     cur_time = datetime.now()
     print 'Instantiating Feature cache: ', str(cur_time - prev_time)
     prev_time = cur_time
 
-    densities_dict = RegionDict(args.dataset_dir, densities_dir, experiment_runner.all_regions, args.batch_size,
-                                loading_mode='numpy')
+    densities_dict = RegionDict(args.dataset_dir, densities_dir, experiment_runner.all_regions, args.regions_batch_size,
+                                loading_mode='numpy', delimiter=',')
     densities = dict(densities_dict.items())
+    print densities.keys()[:10]
+    print 'Num densities keys = ', len(densities.keys())
+    print 'Num regions = ', len(experiment_runner.all_regions)
 
     cur_time = datetime.now()
     print 'Instantiating densities cache: ', str(cur_time - prev_time)
     prev_time = cur_time
 
-    nbrs_dict = RegionDict(args.dataset_dir, nbrs_dir, experiment_runner.all_regions, args.batch_size,
+    nbrs_dict = RegionDict(args.dataset_dir, nbrs_dir, experiment_runner.all_regions, args.regions_batch_size,
                            loading_mode='literal_eval')
     nbrs = dict(nbrs_dict.items())
 
@@ -205,8 +216,9 @@ if __name__ == '__main__':
     prev_time = cur_time
 
     # Instantiate classifier manager
-    classifiers_manager = ClassifiersManager(features_cache, args.classifiers_dir, args.kappas_file, args.labels_dir,
-                                             densities, nbrs, args.classifiers_cache_size, args.labels_cache_size)
+    classifiers_manager = ClassifiersManager(features_cache, args.classifiers_dir, args.kappas_file, args.train_labels_dir, 
+                                             args.val_labels_dir, densities, nbrs, args.classifiers_cache_size, args.labels_cache_size,
+                                             args.min_labels_before_val_set, args.val_label_fraction, args.max_labels_in_val_set)
 
     cur_time = datetime.now()
     print 'Instantiating classifier manager: ', str(cur_time - prev_time)

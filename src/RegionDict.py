@@ -16,12 +16,14 @@ class RegionDict:
     # all_regions - Set of train or test regions
     # batch_size - Number of rows per file
     # loading_mode - "numpy" or "literal_eval"
-    def __init__(self, dataset_dir, contents_dir, all_regions, batch_size, loading_mode):
+    # delimiter - Delimiter for numpy
+    def __init__(self, dataset_dir, contents_dir, all_regions, batch_size, loading_mode, delimiter=None):
         self.dataset_dir = dataset_dir
         self.batch_size = batch_size
         self.all_regions = all_regions
         self.contents_dir = contents_dir
         self.loading_mode = loading_mode
+        self.delimiter = delimiter
 
     def __getitem__(self, key):
         region_idx = self.all_regions.index(key)
@@ -31,7 +33,10 @@ class RegionDict:
         idx_in_file = region_idx - batch_num * self.batch_size
 
         if self.loading_mode == 'numpy':
-            contents = np.loadtxt(filename)
+            if self.delimiter is not None:
+                contents = np.loadtxt(filename, delimiter=self.delimiter)
+            else:
+                contents = np.loadtxt(filename)
             return contents[idx_in_file, :]
 
         elif self.loading_mode == 'literal_eval':
@@ -67,7 +72,10 @@ class RegionDict:
         if self.loading_mode == 'numpy':
             for batch_num in range(max_batch_num):
                 filename = os.path.join(self.dataset_dir, self.contents_dir + str(batch_num) + '.csv')
-                contents = np.loadtxt(filename)
+                if self.delimiter is not None:
+                    contents = np.loadtxt(filename, delimiter=self.delimiter)
+                else:
+                    contents = np.loadtxt(filename)
                 if values is None:
                     values = contents
                 else:
@@ -94,15 +102,18 @@ class RegionDict:
 
         if self.loading_mode == 'numpy':
             for batch_num in range(max_batch_num):
-                keys = self.all_regions[batch_num * self.batch_size:batch_num * (self.batch_size + 1)]
+                keys = self.all_regions[batch_num * self.batch_size:min((batch_num + 1) * self.batch_size, len(self.all_regions))]
                 filename = os.path.join(self.dataset_dir, self.contents_dir + str(batch_num) + '.csv')
-                contents = np.loadtxt(filename)
+                if self.delimiter is not None:
+                    contents = np.loadtxt(filename, delimiter=self.delimiter)
+                else:
+                    contents = np.loadtxt(filename)
                 items += zip(keys, contents.tolist())
             return items
 
         elif self.loading_mode == 'literal_eval':
             for batch_num in range(max_batch_num):
-                keys = self.all_regions[batch_num * self.batch_size:batch_num * (self.batch_size + 1)]
+                keys = self.all_regions[batch_num * self.batch_size:min((batch_num + 1) * self.batch_size, len(self.all_regions))]
                 filename = os.path.join(self.dataset_dir, self.contents_dir + str(batch_num) + '.csv')
                 with open(filename) as handle:
                     contents = [ast.literal_eval(line.strip()) for line in handle.readlines()]
