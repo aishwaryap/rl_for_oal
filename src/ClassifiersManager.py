@@ -22,7 +22,7 @@ class ClassifiersManager:
         self.nbrs = nbrs
 
         # Create LRU caches for accessing classifiers, labels and kappas
-        classifiers_dict = KeyedFileDict(classifiers_dir)
+        classifiers_dict = KeyedFileDict(classifiers_dir, loading_mode='pickle')
         self.classifiers = pylru.WriteThroughCacheManager(classifiers_dict, classifiers_cache_size)
 
         self.kappas = dict()
@@ -30,9 +30,9 @@ class ClassifiersManager:
             with open(kappas_file) as handle:
                 self.kappas = dict([tuple(line.split(',')) for line in handle.read().split('\n')])
 
-        train_labels_dict = KeyedFileDict(train_labels_dir)
+        train_labels_dict = KeyedFileDict(train_labels_dir, loading_mode='pickle')
         self.train_labels = pylru.WriteThroughCacheManager(train_labels_dict, labels_cache_size)
-        val_labels_dict = KeyedFileDict(val_labels_dir)
+        val_labels_dict = KeyedFileDict(val_labels_dir, loading_mode='pickle')
         self.val_labels = pylru.WriteThroughCacheManager(val_labels_dict, labels_cache_size)
         self.min_labels_before_val_set = min_labels_before_val_set
         self.val_label_fraction = val_label_fraction

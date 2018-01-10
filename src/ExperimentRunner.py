@@ -10,6 +10,7 @@ import pickle
 import pylru
 from argparse import ArgumentParser
 from RegionDict import RegionDict
+from KeyedFileDict import KeyedFileDict
 from ClassifiersManager import ClassifiersManager
 from datetime import datetime
 
@@ -180,16 +181,15 @@ if __name__ == '__main__':
 
     # Instantiate region dicts (because this can't be pickled)
     if args.testing:
-        features_dir = 'classifiers/data/features/test/'
+        features_dir = 'indoor/region_features/test/'
         densities_dir = 'densities/test/'
         nbrs_dir = 'nbrs/test/'
     else:
-        features_dir = 'classifiers/data/features/train/'
+        features_dir = 'indoor/region_features/train/'
         densities_dir = 'densities/train/'
         nbrs_dir = 'nbrs/train/'
 
-    features_dict = RegionDict(args.dataset_dir, features_dir, experiment_runner.all_regions, args.regions_batch_size,
-                               loading_mode='numpy', delimiter=',')
+    features_dict = KeyedFileDict(features_dir, loading_mode='numpy', delimiter=',')
     features_cache = pylru.WriteBackCacheManager(features_dict, args.features_cache_size)
 
     cur_time = datetime.now()

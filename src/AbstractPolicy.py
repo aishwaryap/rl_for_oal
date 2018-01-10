@@ -18,10 +18,8 @@ class AbstractPolicy(object):
         positive_scores = np.zeros(len(dialog_state['candidate_regions']))
         negative_scores = np.zeros(len(dialog_state['candidate_regions']))
         for predicate in dialog_state['decisions']:
-            if dialog_state['decisions'][predicate] > 0:
-                positive_scores += dialog_state['current_kappas'][predicate]
-            else:
-                negative_scores += dialog_state['current_kappas'][predicate]
+            positive_scores += (dialog_state['decisions'][predicate] > 0) * dialog_state['current_kappas'][predicate]
+            negative_scores += (dialog_state['decisions'][predicate] <= 0) * dialog_state['current_kappas'][predicate]
         scores = positive_scores / (positive_scores + negative_scores)
         scores = scores.tolist()
         max_score = max(scores)
