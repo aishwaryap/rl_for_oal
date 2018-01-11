@@ -17,10 +17,16 @@ __author__ = 'aishwarya'
 
 class DialogAgent:
     def __init__(self, agent_name, classifier_manager, policy, seen_predicates_file, predicates_with_classifiers_file,
+                 per_turn_reward, success_reward, failure_reward, max_turns,
                  log_filename=None):
         self.agent_name = agent_name
         self.classifier_manager = classifier_manager
         self.policy = policy
+
+        self.per_turn_reward = per_turn_reward
+        self.success_reward = success_reward
+        self.failure_reward = failure_reward
+        self.max_turns = max_turns
 
         # All predicates the agent has ever seen
         self.seen_predicates_file = seen_predicates_file
@@ -267,12 +273,16 @@ class DialogAgent:
             prev_dialog_state = self.get_dialog_state()
             next_action = self.policy.get_next_action(prev_dialog_state)
 
+            reward = self.per_turn_reward
+
             if next_action['action'] == 'make_guess':
                 guess = next_action['guess']
                 if guess == target_region:
                     dialog_stats['success'] = 1
+                    reward = self.success_reward
                 else:
                     dialog_stats['success'] = 0
+                    reward = self.failure_reward
                 dialog_complete = True
                 dialog_stats['num_system_turns'] = self.num_system_turns
 
@@ -286,6 +296,12 @@ class DialogAgent:
                 raise RuntimeError('Invalid action :' + str(next_action['action']))
 
             self.num_system_turns += 1
+            if self.num_system_turns >= self.max_turns:
+                dialog_complete = True
+                dialog_stats['success'] = 0
+                dialog_stats['num_system_turns'] = self.num_system_turns
+                reward = self.failure_reward
+
             if dialog_complete:
                 next_dialog_state = None
             else:
@@ -296,7 +312,7 @@ class DialogAgent:
             self.log('Turn ' + str(self.num_system_turns - 1)
                      + ' time = ' + format(datetime.now() - turn_start_time))
             print 'Turn ' + str(self.num_system_turns - 1) \
-                     + ' time = ' + format(datetime.now() - turn_start_time)
+                  + ' time = ' + format(datetime.now() - turn_start_time)
 
         self.finish_task()
 
@@ -334,6 +350,15 @@ if __name__ == '__main__':
                             help='Log file')
     arg_parser.add_argument('--save-file', type=str, required=True,
                             help='File to save pickled agent')
+
+    arg_parser.add_argument('--per-turn-reward', type=float, default=-1,
+                            help='Reward for non-terminating turns')
+    arg_parser.add_argument('--success-reward', type=float, default=100,
+                            help='Reward for successful dialog')
+    arg_parser.add_argument('--failure-reward', type=float, default=-100,
+                            help='Reward for failed dialog')
+    arg_parser.add_argument('--max-turns', type=int, default=1000,
+                            help='Terminate the dialog after this many turns')
 
     args = arg_parser.parse_args()
 
