@@ -188,16 +188,29 @@ if __name__ == '__main__':
 
     # Instantiate region dicts (because this can't be pickled)
     if args.testing:
-        features_file = 'classifiers/data/features/test/' + str(args.batch_num) + '.csv'
-        densities_file = 'densities/test/' + str(args.batch_num) + '.csv'
-        nbrs_file = 'nbrs/test/' + str(args.batch_num) + '.csv'
+        features_file = os.path.join(args.dataset_dir, 'classifiers/data/features/test/' + str(args.batch_num) + '.csv')
+        densities_file = os.path.join(args.dataset_dir, 'densities/test/' + str(args.batch_num) + '.csv')
+        nbrs_file = os.path.join(args.dataset_dir, 'nbrs/test/' + str(args.batch_num) + '.csv')
     else:
-        features_file = 'classifiers/data/features/test/' + str(args.batch_num) + '.csv'
-        densities_file = 'densities/train/' + str(args.batch_num) + '.csv'
-        nbrs_file = 'nbrs/train/' + str(args.batch_num) + '.csv'
+        features_file = os.path.join(args.dataset_dir, 'classifiers/data/features/test/' + str(args.batch_num) + '.csv')
+        densities_file = os.path.join(args.dataset_dir, 'densities/train/' + str(args.batch_num) + '.csv')
+        nbrs_file = os.path.join(args.dataset_dir, 'nbrs/train/' + str(args.batch_num) + '.csv')
 
-    features = np.loadtxt(features_file, dtype=np.float, delimiter=',')
-    features_dict = dict(zip(experiment_runner.batch_regions, features.tolist()))
+    print 'len(batch_regions) =', len(experiment_runner.batch_regions)
+    print 'Some regions:', experiment_runner.batch_regions[:10]
+
+    #features = np.loadtxt(features_file, dtype=np.float, delimiter=',')
+    #features_dict = dict(zip(experiment_runner.batch_regions, features.tolist()))
+    features_dict = dict()
+    with open(features_file) as handle:
+        reader = csv.reader(handle, delimiter=',')
+        row_idx = 0
+        for row in reader:
+            features_dict[experiment_runner.batch_regions[row_idx]] = [float(x) for x in row]
+            row_idx += 1
+
+    print 'Num features =', len(features_dict.keys())
+    print 'Some feature keys:', features_dict.keys()[:10]
 
     cur_time = datetime.now()
     print 'Instantiating Feature cache: ', str(cur_time - prev_time)
@@ -205,6 +218,9 @@ if __name__ == '__main__':
 
     densities = np.loadtxt(densities_file, dtype=np.float, delimiter=',')
     densities_dict = dict(zip(experiment_runner.batch_regions, densities.tolist()))
+
+    print 'Num densities =', len(densities_dict.keys())
+    print 'Some densities keys:', densities_dict.keys()[:10]
 
     cur_time = datetime.now()
     print 'Instantiating densities cache: ', str(cur_time - prev_time)
@@ -215,6 +231,10 @@ if __name__ == '__main__':
         row_idx = 0
         for row in handle:
             nbrs_dict[experiment_runner.batch_regions[row_idx]] = ast.literal_eval(row)
+            row_idx += 1
+
+    print 'Num nbrs =', len(nbrs_dict.keys())
+    print 'Some nbrs keys:', nbrs_dict.keys()[:10]
 
     cur_time = datetime.now()
     print 'Instantiating neighbours cache: ', str(cur_time - prev_time)
