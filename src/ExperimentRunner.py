@@ -188,11 +188,11 @@ if __name__ == '__main__':
 
     # Instantiate region dicts (because this can't be pickled)
     if args.testing:
-        features_file = 'indoor/region_features/test/' + str(args.batch_num) + '.csv'
+        features_file = 'classifiers/data/features/test/' + str(args.batch_num) + '.csv'
         densities_file = 'densities/test/' + str(args.batch_num) + '.csv'
         nbrs_file = 'nbrs/test/' + str(args.batch_num) + '.csv'
     else:
-        features_file = 'indoor/region_features/train/' + str(args.batch_num) + '.csv'
+        features_file = 'classifiers/data/features/test/' + str(args.batch_num) + '.csv'
         densities_file = 'densities/train/' + str(args.batch_num) + '.csv'
         nbrs_file = 'nbrs/train/' + str(args.batch_num) + '.csv'
 

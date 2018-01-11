@@ -27,5 +27,6 @@ python ExperimentRunner.py \
     --train-labels-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/train \
     --val-labels-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/val \
     --agent-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/dialog_agent.pkl \
-    --num-dialogs=10
+    --num-dialogs=10 \
+    --batch-num=0
 
