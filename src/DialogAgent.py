@@ -221,7 +221,7 @@ class DialogAgent:
         dialog_state['target_region'] = self.target_region
         dialog_state['current_kappas'] = dict()
         for predicate in self.current_predicates:
-            dialog_state['current_kappas'] = self.classifier_manager.get_kappa(predicate)
+            dialog_state['current_kappas'][predicate] = self.classifier_manager.get_kappa(predicate)
         dialog_state['labels_acquired'] = copy.deepcopy(self.labels_acquired)
         dialog_state['predicates_without_classifiers'] = self.predicates_without_classifiers
         dialog_state['candidate_regions_features'] = self.candidate_regions_features
