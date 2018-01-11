@@ -127,7 +127,6 @@ class DialogAgent:
         cur_time = datetime.now()
         print 'Completing setup: ' + str(cur_time - prev_time)
 
-
     def finish_task(self):
         # Precautions to make sure these get reset
         self.candidate_regions = None
@@ -306,12 +305,17 @@ class DialogAgent:
 
         return dialog_stats
 
-    def shutdown(self):
+    def save(self, save_filename):
         with open(self.seen_predicates_file, 'w') as handle:
             handle.write('\n'.join(self.seen_predicates))
 
         with open(self.predicates_with_classifiers_file, 'w') as handle:
             handle.write('\n'.join(self.predicates_with_classifiers))
+
+        self.classifier_manager = None
+        self.policy.classifier_manager = None
+        with open(save_filename, 'wb') as save_file:
+            pickle.dump(dialog_agent, save_file)
 
 
 if __name__ == '__main__':
@@ -339,6 +343,5 @@ if __name__ == '__main__':
     # Needs to be instantiated without a classifier manager to be pickled
     dialog_agent = DialogAgent(args.agent_name, None, loaded_policy, args.seen_predicates_file,
                                args.predicates_with_classifiers_file, args.log_filename)
+    dialog_agent.save(args.save_file)
 
-    with open(args.save_file, 'wb') as save_file:
-        pickle.dump(dialog_agent, save_file)

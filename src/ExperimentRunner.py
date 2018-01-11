@@ -7,6 +7,7 @@ import numpy as np
 import scipy.stats
 import math
 import pickle
+import ast
 import pylru
 from argparse import ArgumentParser
 from RegionDict import RegionDict
@@ -22,8 +23,8 @@ __author__ = 'aishwarya'
 
 class ExperimentRunner:
     # min_regions, max_regions, mean_regions, std_dev_regions - Domain of discourse (Paramters for truncated Gaussian)
-    def __init__(self, dataset_dir, dialog_stats_filename, testing, min_regions, max_regions, mean_regions,
-                 std_dev_regions):
+    def __init__(self, dataset_dir, dialog_stats_filename, testing, batch_num, batch_size,
+                 min_regions, max_regions, mean_regions, std_dev_regions):
         self.dataset_dir = dataset_dir
         self.testing = testing
 
@@ -33,14 +34,16 @@ class ExperimentRunner:
         self.std_dev_regions = std_dev_regions
 
         prev_time = datetime.now()
-        self.all_regions = None
+        all_regions = None
         if self.testing:
             regions_filename = os.path.join(self.dataset_dir, 'classifiers/data/test_regions.txt')
         else:
             regions_filename = os.path.join(self.dataset_dir, 'classifiers/data/train_regions.txt')
         with open(regions_filename) as regions_file:
-            self.all_regions = regions_file.read().split('\n')
-        self.region_set = set(self.all_regions)
+            all_regions = regions_file.read().split('\n')
+        self.batch_regions = all_regions[batch_num * batch_size :
+                                         min((batch_num + 1) * batch_size, len(all_regions))]
+        self.region_set = set(self.batch_regions)
 
         cur_time = datetime.now()
         print 'Reading regions: ', str(cur_time - prev_time)
@@ -52,7 +55,7 @@ class ExperimentRunner:
             os.path.join(self.dataset_dir, 'indoor/region_attributes_unique.csv')
         ]
         self.region_contents = dict()
-        for region in self.all_regions:
+        for region in self.region_set:
             self.region_contents[region] = list()
         for region_contents_file in region_contents_files:
             file_handle = open(region_contents_file)
@@ -90,7 +93,7 @@ class ExperimentRunner:
             loc=self.mean_regions, scale=self.std_dev_regions, size=1)))
 
         # Sample num_regions uniformly without replacement
-        regions = np.random.choice(self.all_regions, num_regions)
+        regions = np.random.choice(self.batch_regions, num_regions)
         return regions
 
     def run_experiment(self, agent):
@@ -166,14 +169,18 @@ if __name__ == '__main__':
     arg_parser.add_argument('--num-dialogs', type=int, required=True,
                             help='Num dialogs to run')
 
+    arg_parser.add_argument('--batch-num', type=int, required=True,
+                            help='Batch of regions to use')
+
     args = arg_parser.parse_args()
 
     cur_time = datetime.now()
     print 'Parsing args: ', str(cur_time - prev_time)
     prev_time = cur_time
 
-    experiment_runner = ExperimentRunner(args.dataset_dir, args.dialog_stats_filename, args.testing, args.min_regions,
-                                         args.max_regions, args.mean_regions, args.std_dev_regions)
+    experiment_runner = ExperimentRunner(args.dataset_dir, args.dialog_stats_filename, args.testing, args.batch_num,
+                                         args.regions_batch_size, args.min_regions, args.max_regions, args.mean_regions,
+                                         args.std_dev_regions)
 
     cur_time = datetime.now()
     print 'Instantiating ExperimentRunner: ', str(cur_time - prev_time)
@@ -181,43 +188,41 @@ if __name__ == '__main__':
 
     # Instantiate region dicts (because this can't be pickled)
     if args.testing:
-        features_dir = 'indoor/region_features/test/'
-        densities_dir = 'densities/test/'
-        nbrs_dir = 'nbrs/test/'
+        features_file = 'indoor/region_features/test/' + str(args.batch_num) + '.csv'
+        densities_file = 'densities/test/' + str(args.batch_num) + '.csv'
+        nbrs_file = 'nbrs/test/' + str(args.batch_num) + '.csv'
     else:
-        features_dir = 'indoor/region_features/train/'
-        densities_dir = 'densities/train/'
-        nbrs_dir = 'nbrs/train/'
+        features_file = 'indoor/region_features/train/' + str(args.batch_num) + '.csv'
+        densities_file = 'densities/train/' + str(args.batch_num) + '.csv'
+        nbrs_file = 'nbrs/train/' + str(args.batch_num) + '.csv'
 
-    features_dict = KeyedFileDict(features_dir, loading_mode='numpy', delimiter=',')
-    features_cache = pylru.WriteBackCacheManager(features_dict, args.features_cache_size)
+    features = np.loadtxt(features_file, dtype=np.float, delimiter=',')
+    features_dict = dict(zip(experiment_runner.batch_regions, features.tolist()))
 
     cur_time = datetime.now()
     print 'Instantiating Feature cache: ', str(cur_time - prev_time)
     prev_time = cur_time
 
-    densities_dict = RegionDict(args.dataset_dir, densities_dir, experiment_runner.all_regions, args.regions_batch_size,
-                                loading_mode='numpy', delimiter=',')
-    densities = dict(densities_dict.items())
-    print densities.keys()[:10]
-    print 'Num densities keys = ', len(densities.keys())
-    print 'Num regions = ', len(experiment_runner.all_regions)
+    densities = np.loadtxt(densities_file, dtype=np.float, delimiter=',')
+    densities_dict = dict(zip(experiment_runner.batch_regions, densities.tolist()))
 
     cur_time = datetime.now()
     print 'Instantiating densities cache: ', str(cur_time - prev_time)
     prev_time = cur_time
 
-    nbrs_dict = RegionDict(args.dataset_dir, nbrs_dir, experiment_runner.all_regions, args.regions_batch_size,
-                           loading_mode='literal_eval')
-    nbrs = dict(nbrs_dict.items())
+    nbrs_dict = dict()
+    with open(nbrs_file) as handle:
+        row_idx = 0
+        for row in handle:
+            nbrs_dict[experiment_runner.batch_regions[row_idx]] = ast.literal_eval(row)
 
     cur_time = datetime.now()
     print 'Instantiating neighbours cache: ', str(cur_time - prev_time)
     prev_time = cur_time
 
     # Instantiate classifier manager
-    classifiers_manager = ClassifiersManager(features_cache, args.classifiers_dir, args.kappas_file, args.train_labels_dir, 
-                                             args.val_labels_dir, densities, nbrs, args.classifiers_cache_size, args.labels_cache_size,
+    classifiers_manager = ClassifiersManager(features_dict, args.classifiers_dir, args.kappas_file, args.train_labels_dir,
+                                             args.val_labels_dir, densities_dict, nbrs_dict, args.classifiers_cache_size, args.labels_cache_size,
                                              args.min_labels_before_val_set, args.val_label_fraction, args.max_labels_in_val_set)
 
     cur_time = datetime.now()
@@ -239,5 +244,8 @@ if __name__ == '__main__':
     cur_time = datetime.now()
     print 'Running dialogs: ', str(cur_time - prev_time)
     prev_time = cur_time
+
+    dialog_agent.policy.save()
+    dialog_agent.save(args.agent_file)
 
     experiment_runner.finish()
