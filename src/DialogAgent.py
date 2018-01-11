@@ -307,7 +307,7 @@ class DialogAgent:
             else:
                 next_dialog_state = self.get_dialog_state()
 
-            self.policy.update(prev_dialog_state, next_action, next_dialog_state)
+            self.policy.update(prev_dialog_state, next_action, next_dialog_state, reward)
 
             self.log('Turn ' + str(self.num_system_turns - 1)
                      + ' time = ' + format(datetime.now() - turn_start_time))
@@ -367,6 +367,8 @@ if __name__ == '__main__':
 
     # Needs to be instantiated without a classifier manager to be pickled
     dialog_agent = DialogAgent(args.agent_name, None, loaded_policy, args.seen_predicates_file,
-                               args.predicates_with_classifiers_file, args.log_filename)
+                               args.predicates_with_classifiers_file, args.per_turn_reward,
+                               args.success_reward, args.failure_reward, args.max_turns,
+                               args.log_filename)
     dialog_agent.save(args.save_file)
 
