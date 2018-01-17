@@ -152,10 +152,13 @@ class ClassifiersManager:
             for idx in range(len(labels)):
                 classifier = self.get_initial_classifier()
                 train_features = np.vstack((features[:idx, :], features[idx+1:, :]))
-                train_labels = labels[:idx] + labels[idx+1:]
-                classifier.fit(train_features, train_labels, classes=[0,1])
-                pred = classifier.predict(features[idx, :])
-                preds.append(pred)
+                train_labels = np.array(labels[:idx] + labels[idx+1:])
+                if np.unique(train_labels).shape[0] == 2:
+                    classifier.fit(train_features, train_labels)
+                    pred = classifier.predict(features[idx, :])
+                    preds.append(pred)
+                else:
+                    preds.append(labels[idx])
 
             # Compute Kappa and normalize to 0-1
             kappa = (cohen_kappa_score(labels, preds) + 1.0) / 2.0
