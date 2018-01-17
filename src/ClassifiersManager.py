@@ -97,7 +97,7 @@ class ClassifiersManager:
             labels = [label for (region, label) in new_train_labels]
             features = None
             for region in regions:
-                feature = self.feature_dict[region]
+                feature = np.array(self.feature_dict[region])
                 if features is None:
                     features = feature
                 else:
@@ -140,7 +140,7 @@ class ClassifiersManager:
             labels = [label for (region, label) in self.train_labels[predicate]]
             features = None
             for region in regions:
-                feature = self.feature_dict[region]
+                feature = np.array(self.feature_dict[region])
                 if features is None:
                     features = feature
                 else:
@@ -153,7 +153,7 @@ class ClassifiersManager:
                 classifier = self.get_initial_classifier()
                 train_features = np.vstack((features[:idx, :], features[idx+1:, :]))
                 train_labels = labels[:idx] + labels[idx+1:]
-                classifier.fit(train_features, train_labels)
+                classifier.fit(train_features, train_labels, classes=[0,1])
                 pred = classifier.predict(features[idx, :])
                 preds.append(pred)
 

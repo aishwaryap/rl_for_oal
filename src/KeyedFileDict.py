@@ -33,8 +33,8 @@ class KeyedFileDict:
     def __getitem__(self, key):
         if self.loading_mode == 'pickle':
             filename = os.path.join(self.dict_dir, str(key) + '.pkl')
-            print 'filename =', filename, '; press enter:'
-            x = raw_input()
+            # print 'filename =', filename, '; press enter:'
+            # x = raw_input()
             if not os.path.isfile(filename):
                 return None
             with open(filename, 'rb') as handle:

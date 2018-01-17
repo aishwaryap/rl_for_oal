@@ -42,7 +42,9 @@ class AbstractPolicy(object):
         if predicate in self.classifier_manager.val_labels.keys():
             previously_labelled_regions.union([region for (region, label) in
                                                self.classifier_manager.val_labels[predicate]])
-        regions_labelled_in_dialog = set([region for (region, label) in dialog_state['labels_acquired'][predicate]])
+        regions_labelled_in_dialog = set()
+        if predicate in dialog_state['labels_acquired']:
+            regions_labelled_in_dialog = set([region for (region, label) in dialog_state['labels_acquired'][predicate]])
         output = [region for region in dialog_state['candidate_regions'] if region not in previously_labelled_regions
                   and region not in regions_labelled_in_dialog]
         print '\n\n\nGot regions for', predicate
