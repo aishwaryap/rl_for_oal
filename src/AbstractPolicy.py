@@ -4,6 +4,7 @@
 import numpy as np
 import math
 import pickle
+import os
 
 __author__ = 'aishwarya'
 
@@ -33,10 +34,34 @@ class AbstractPolicy(object):
 
     # For a predicate, find regions that aren't labelled, either in the classifier manager or in the dialog
     def get_label_question_regions(self, predicate, dialog_state):
-        previously_labelled_regions = set([region for (region, label) in self.classifier_manager.labels[predicate]])
+        print '\n\t\tIn get_label_question_regions for', predicate
+        previously_labelled_regions = set()
+        print '\t\tBefore train if'
+        if predicate in self.classifier_manager.train_labels:
+        #if os.path.isfile('/scratch/cluster/aish/rl_for_oal/timed_unit_test/classifiers/' + predicate):
+            print '\t\tInside train if'
+            dict_entry = self.classifier_manager.train_labels[predicate]
+            print '\t\tFetched dict entry'
+            regions = [region for (region, label) in dict_entry]
+            print '\t\tGot regions'
+            previously_labelled_regions.union(regions)
+            print '\t\tCombined regions'
+        print '\t\tBefore val if'
+        if predicate in self.classifier_manager.val_labels:
+            print '\t\tInside val if'
+            dict_entry = self.classifier_manager.val_labels[predicate]
+            print '\t\tFetched dict entry'
+            regions = [region for (region, label) in dict_entry]
+            print '\t\tGot regions'
+            previously_labelled_regions.union(regions)
+            print '\t\tCombined regions'
+        print '\t\tFetched previously labelled regions'
         regions_labelled_in_dialog = set([region for (region, label) in dialog_state['labels_acquired'][predicate]])
-        return [region for region in dialog_state['candidate_regions'] if region not in previously_labelled_regions
+        print '\t\t Fetched regions labelled in dialog'
+        output = [region for region in dialog_state['candidate_regions'] if region not in previously_labelled_regions
                 and region not in regions_labelled_in_dialog]
+        print '\n\n\nGot regions for', predicate
+        return output
 
     def get_min_margin_region(self, predicate, candidate_regions, dialog_state):
         data_points = np.array([dialog_state['candidate_regions_features'][region] for region in candidate_regions])
@@ -47,6 +72,7 @@ class AbstractPolicy(object):
 
     # Find valid label questions
     def get_label_question_candidates(self, dialog_state, beam_size=None):
+        print '\n\t\t\tIn get_label_question_candidates'
         if self.on_topic:
             unknown_cur_dialog_predicates = [predicate for predicate in dialog_state['current_predicates']
                                              if predicate in dialog_state['predicates_without_classifiers']]
@@ -62,6 +88,8 @@ class AbstractPolicy(object):
             # Sample a predicate with probability proportional to 1 - confidence in lowest confidence object
             prob_numerators = [1.0] * len(dialog_state['predicates_without_classifiers']) + \
                               [(1.0 - self.classifier_manager.kappas[predicate]) for predicate in known_predicates]
+
+        print '\t\t\tGot predicates'
 
         questions = list()
         if beam_size is None:
@@ -117,7 +145,7 @@ class AbstractPolicy(object):
         if beam_size is None or beam_size > len(candidates):
             chosen_predicates = candidates
         else:
-            chosen_predicates = np.random.choice(candidates, size=beam_size, replace=False)
+            chosen_predicates = np.random.choice(list(candidates), size=beam_size, replace=False)
 
         question_actions = [{'action': 'ask_positive_example', 'predicate': predicate}
                             for predicate in chosen_predicates]

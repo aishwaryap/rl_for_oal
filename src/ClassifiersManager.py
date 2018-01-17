@@ -23,7 +23,8 @@ class ClassifiersManager:
 
         # Create LRU caches for accessing classifiers, labels and kappas
         classifiers_dict = KeyedFileDict(classifiers_dir, loading_mode='pickle')
-        self.classifiers = pylru.WriteThroughCacheManager(classifiers_dict, classifiers_cache_size)
+        #self.classifiers = pylru.WriteThroughCacheManager(classifiers_dict, classifiers_cache_size)
+        self.classifiers = classifiers_dict
 
         self.kappas = dict()
         if os.path.isfile(kappas_file):

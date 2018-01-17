@@ -4,6 +4,7 @@
 import random
 from AbstractPolicy import AbstractPolicy
 from argparse import ArgumentParser
+from datetime import datetime
 
 __author__ = 'aishwarya'
 
@@ -45,25 +46,58 @@ class StaticPolicy(AbstractPolicy):
         return avg_kappa < self.max_avg_kappa
 
     def get_next_action(self, dialog_state):
+        #print '\n\t\tIn get_next_action'
+        start_time = datetime.now()
+
         if dialog_state['num_system_turns'] >= self.max_questions:
+            #print 'Hit max questions'
+            prev_time = datetime.now()
             next_action = self.get_guess(dialog_state)
+            cur_time = datetime.now()
+            #print 'Time to evaluate guess =', str(cur_time - prev_time)
 
         else:
+            #print 'Didn\'t hit max questions'
+            prev_time = datetime.now()
             ask_example_valid = self.ask_example_valid(dialog_state)
+            cur_time = datetime.now()
+            #print 'Evaluating ask_example_valid =', str(cur_time - prev_time)
+
+            prev_time = datetime.now()
             yes_no_valid = self.yes_no_valid(dialog_state)
+            cur_time = datetime.now()
+            #print 'Evaluating yes_no_valid =', str(cur_time - prev_time)
 
             if ask_example_valid and yes_no_valid:
                 r = random.random()
                 if r <= self.yes_no_prob:
+                    prev_time = datetime.now()
                     next_action = self.get_label_question_candidates(dialog_state, beam_size=1)[0]
+                    cur_time = datetime.now()
+                    #print 'Getting label question =', str(cur_time - prev_time)
                 else:
+                    prev_time = datetime.now()
                     next_action = self.get_example_question_candidates(dialog_state, beam_size=1)[0]
+                    cur_time = datetime.now()
+                    #print 'Getting example question =', str(cur_time - prev_time)
             elif ask_example_valid:
+                prev_time = datetime.now()
                 next_action = self.get_example_question_candidates(dialog_state, beam_size=1)[0]
+                cur_time = datetime.now()
+                #print 'Getting example question =', str(cur_time - prev_time)
             elif yes_no_valid:
+                prev_time = datetime.now()
                 next_action = self.get_label_question_candidates(dialog_state, beam_size=1)[0]
+                cur_time = datetime.now()
+                #print 'Getting label question =', str(cur_time - prev_time)
             else:
+                prev_time = datetime.now()
                 next_action = self.get_guess(dialog_state)
+                cur_time = datetime.now()
+                #print 'Getting guess =', str(cur_time - prev_time)
+
+        cur_time = datetime.now()
+        #print 'Total time to get action =', str(cur_time - start_time), '\n'
 
         return next_action
 

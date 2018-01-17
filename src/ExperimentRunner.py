@@ -59,9 +59,9 @@ class ExperimentRunner:
             self.region_contents[region] = list()
         for region_contents_file in region_contents_files:
             file_handle = open(region_contents_file)
-            reader = csv.reader(file_handle)
+            reader = csv.reader(file_handle, delimiter=',')
             for row in reader:
-                region_id = int(row[0])
+                region_id = row[0]
                 if region_id in self.region_set:
                     self.region_contents[region_id] += row[1:]
             file_handle.close()
@@ -100,7 +100,9 @@ class ExperimentRunner:
         domain_of_discourse = self.sample_domain_of_discourse()
         target_region = np.random.choice(domain_of_discourse)
         description = self.region_descriptions[target_region]
-        contents = self.region_contents[target_region]
+        contents = dict()
+        for region in domain_of_discourse:
+            contents = self.region_contents[region]
         dialog_stats = agent.run_dialog(domain_of_discourse, target_region, description, contents)
         self.dialog_stats_writer.writerow(dialog_stats)
 
@@ -108,7 +110,7 @@ class ExperimentRunner:
         for i in range(num_dialogs):
             print 'Running experiment', i
             self.run_experiment(agent)
-        agent.shutdown()
+        #agent.shutdown()
 
     def finish(self):
         self.dialog_stats_file.close()
