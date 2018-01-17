@@ -36,30 +36,15 @@ class AbstractPolicy(object):
     def get_label_question_regions(self, predicate, dialog_state):
         print '\n\t\tIn get_label_question_regions for', predicate
         previously_labelled_regions = set()
-        print '\t\tBefore train if'
-        print 'self.classifier_manager.train_labels.keys() = ', self.classifier_manager.train_labels.keys()
         if predicate in self.classifier_manager.train_labels.keys():
-            print '\t\tInside train if'
-            dict_entry = self.classifier_manager.train_labels[predicate]
-            print '\t\tFetched dict entry'
-            regions = [region for (region, label) in dict_entry]
-            print '\t\tGot regions'
-            previously_labelled_regions.union(regions)
-            print '\t\tCombined regions'
-        print '\t\tBefore val if'
+            previously_labelled_regions.union([region for (region, label) in
+                                               self.classifier_manager.train_labels[predicate]])
         if predicate in self.classifier_manager.val_labels.keys():
-            print '\t\tInside val if'
-            dict_entry = self.classifier_manager.val_labels[predicate]
-            print '\t\tFetched dict entry'
-            regions = [region for (region, label) in dict_entry]
-            print '\t\tGot regions'
-            previously_labelled_regions.union(regions)
-            print '\t\tCombined regions'
-        print '\t\tFetched previously labelled regions'
+            previously_labelled_regions.union([region for (region, label) in
+                                               self.classifier_manager.val_labels[predicate]])
         regions_labelled_in_dialog = set([region for (region, label) in dialog_state['labels_acquired'][predicate]])
-        print '\t\t Fetched regions labelled in dialog'
         output = [region for region in dialog_state['candidate_regions'] if region not in previously_labelled_regions
-                and region not in regions_labelled_in_dialog]
+                  and region not in regions_labelled_in_dialog]
         print '\n\n\nGot regions for', predicate
         return output
 
@@ -77,7 +62,7 @@ class AbstractPolicy(object):
             unknown_cur_dialog_predicates = [predicate for predicate in dialog_state['current_predicates']
                                              if predicate in dialog_state['predicates_without_classifiers']]
             known_cur_dialog_predicates = [predicate for predicate in dialog_state['current_predicates']
-                                           if predicate in self.classifier_manager.kappas.items()]
+                                           if predicate in self.classifier_manager.kappas.keys()]
             predicates = unknown_cur_dialog_predicates + known_cur_dialog_predicates
             prob_numerators = [1.0] * len(unknown_cur_dialog_predicates) + \
                               [(1.0 - self.classifier_manager.kappas[predicate])

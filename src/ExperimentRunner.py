@@ -110,7 +110,6 @@ class ExperimentRunner:
         for i in range(num_dialogs):
             print 'Running experiment', i
             self.run_experiment(agent)
-        #agent.shutdown()
 
     def finish(self):
         self.dialog_stats_file.close()
@@ -201,8 +200,6 @@ if __name__ == '__main__':
     print 'len(batch_regions) =', len(experiment_runner.batch_regions)
     print 'Some regions:', experiment_runner.batch_regions[:10]
 
-    #features = np.loadtxt(features_file, dtype=np.float, delimiter=',')
-    #features_dict = dict(zip(experiment_runner.batch_regions, features.tolist()))
     features_dict = dict()
     with open(features_file) as handle:
         reader = csv.reader(handle, delimiter=',')

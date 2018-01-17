@@ -161,11 +161,6 @@ class DialogAgent:
         # Find regions in the domain of discourse for which this predicate holds
         positive_regions = list()
         for region in self.candidate_regions:
-            #print 'predicate =', predicate
-            #print 'region =', region
-            #print 'type(self.region_contents) =', type(self.region_contents)
-            #print 'self.region_contents =', self.region_contents
-            #print 'self.region_contents[region] =', self.region_contents[region]
             if predicate in self.region_contents[region]:
                 positive_regions.append(region)
 
