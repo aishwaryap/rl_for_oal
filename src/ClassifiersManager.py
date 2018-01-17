@@ -44,7 +44,7 @@ class ClassifiersManager:
 
     # Return kappa if classifier exists else return 0
     def get_kappa(self, predicate):
-        if predicate in self.kappas:
+        if predicate in self.kappas.keys():
             return self.kappas[predicate]
         else:
             return 0.0
@@ -73,11 +73,11 @@ class ClassifiersManager:
             classifier = self.get_initial_classifier()
 
         new_val_labels = list()
-        if predicate not in self.train_labels:
+        if predicate not in self.train_labels.keys():
             self.train_labels[predicate] = new_labels
             new_train_labels = new_labels
         elif len(self.train_labels[predicate]) <= self.min_labels_before_val_set or \
-                (predicate in self.val_labels and len(self.val_labels[predicate]) > self.max_labels_in_val_set):
+                (predicate in self.val_labels.keys() and len(self.val_labels[predicate]) > self.max_labels_in_val_set):
             self.train_labels[predicate] += new_labels
             new_train_labels = new_labels
         else:
@@ -87,7 +87,7 @@ class ClassifiersManager:
             new_val_labels = [label for (label, idx) in enumerate(new_labels)
                               if random_nums[idx] <= self.val_label_fraction]
             self.train_labels[predicate] += new_train_labels
-            if predicate not in self.val_labels:
+            if predicate not in self.val_labels.keys():
                 self.val_labels[predicate] = new_val_labels
             else:
                 self.val_labels[predicate] += new_val_labels
@@ -107,7 +107,7 @@ class ClassifiersManager:
             classifier.partial_fit(features, labels, classes=[0, 1])
             self.classifiers[predicate] = classifier
 
-        if predicate in self.val_labels:
+        if predicate in self.val_labels.keys():
             self.compute_val_set_kappa(predicate)
         else:
             self.compute_crossval_kappa(predicate)
@@ -115,7 +115,7 @@ class ClassifiersManager:
     # Compute kappa on val set
     def compute_val_set_kappa(self, predicate):
         classifier = self.classifiers[predicate]
-        if classifier is not None and predicate in self.val_labels:
+        if classifier is not None and predicate in self.val_labels.keys():
             regions = [region for (region, label) in self.val_labels[predicate]]
             labels = [label for (region, label) in self.val_labels[predicate]]
             features = None
@@ -135,7 +135,7 @@ class ClassifiersManager:
 
     # Compute kappa by leave one out cross validation on train set
     def compute_crossval_kappa(self, predicate):
-        if predicate in self.train_labels:
+        if predicate in self.train_labels.keys():
             regions = [region for (region, label) in self.train_labels[predicate]]
             labels = [label for (region, label) in self.train_labels[predicate]]
             features = None

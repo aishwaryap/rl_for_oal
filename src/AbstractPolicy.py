@@ -37,8 +37,8 @@ class AbstractPolicy(object):
         print '\n\t\tIn get_label_question_regions for', predicate
         previously_labelled_regions = set()
         print '\t\tBefore train if'
-        if predicate in self.classifier_manager.train_labels:
-        #if os.path.isfile('/scratch/cluster/aish/rl_for_oal/timed_unit_test/classifiers/' + predicate):
+        print 'self.classifier_manager.train_labels.keys() = ', self.classifier_manager.train_labels.keys()
+        if predicate in self.classifier_manager.train_labels.keys():
             print '\t\tInside train if'
             dict_entry = self.classifier_manager.train_labels[predicate]
             print '\t\tFetched dict entry'
@@ -47,7 +47,7 @@ class AbstractPolicy(object):
             previously_labelled_regions.union(regions)
             print '\t\tCombined regions'
         print '\t\tBefore val if'
-        if predicate in self.classifier_manager.val_labels:
+        if predicate in self.classifier_manager.val_labels.keys():
             print '\t\tInside val if'
             dict_entry = self.classifier_manager.val_labels[predicate]
             print '\t\tFetched dict entry'

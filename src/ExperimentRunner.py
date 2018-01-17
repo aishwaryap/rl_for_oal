@@ -102,7 +102,7 @@ class ExperimentRunner:
         description = self.region_descriptions[target_region]
         contents = dict()
         for region in domain_of_discourse:
-            contents = self.region_contents[region]
+            contents[region] = self.region_contents[region]
         dialog_stats = agent.run_dialog(domain_of_discourse, target_region, description, contents)
         self.dialog_stats_writer.writerow(dialog_stats)
 
@@ -246,6 +246,8 @@ if __name__ == '__main__':
     classifiers_manager = ClassifiersManager(features_dict, args.classifiers_dir, args.kappas_file, args.train_labels_dir,
                                              args.val_labels_dir, densities_dict, nbrs_dict, args.classifiers_cache_size, args.labels_cache_size,
                                              args.min_labels_before_val_set, args.val_label_fraction, args.max_labels_in_val_set)
+
+    print 'classifiers_manager.train_labels.keys() = ', classifiers_manager.train_labels.keys()
 
     cur_time = datetime.now()
     print 'Instantiating classifier manager: ', str(cur_time - prev_time)
