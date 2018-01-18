@@ -18,7 +18,7 @@ class AbstractPolicy(object):
     def get_guess(self, dialog_state):
         positive_scores = np.zeros(len(dialog_state['candidate_regions']))
         negative_scores = np.zeros(len(dialog_state['candidate_regions']))
-        for predicate in dialog_state['decisions']:
+        for predicate in dialog_state['current_predicates']:
             positive_scores += (dialog_state['decisions'][predicate] > 0) * dialog_state['current_kappas'][predicate]
             negative_scores += (dialog_state['decisions'][predicate] <= 0) * dialog_state['current_kappas'][predicate]
         scores = positive_scores / (positive_scores + negative_scores)
