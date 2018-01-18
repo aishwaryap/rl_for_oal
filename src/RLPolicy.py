@@ -117,13 +117,27 @@ class RLPolicy(AbstractPolicy):
         return self.q.predict(feature_vector)
 
     def update(self, prev_dialog_state, next_action, next_dialog_state, reward):
-        next_state_candidate_actions = self.get_candidate_actions(next_dialog_state)
-        q_values = [self.get_q(next_dialog_state, action) for action in next_state_candidate_actions]
-        max_q = max(q_values)
-        max_q_idx = q_values.index(max_q)
-        self.stored_action = next_state_candidate_actions[max_q_idx]
-        target_q = reward + self.gamma * max_q
+        if next_dialog_state is not None:
+            next_state_candidate_actions = self.get_candidate_actions(next_dialog_state)
+            q_values = [self.get_q(next_dialog_state, action) for action in next_state_candidate_actions]
+            max_q = max(q_values)
+            max_q_idx = q_values.index(max_q)
+            self.stored_action = next_state_candidate_actions[max_q_idx]
+            target_q = reward + self.gamma * max_q
+        else:
+            self.stored_action = None
+            target_q = reward
         self.q.partial_fit([self.get_features(prev_dialog_state, next_action)], [target_q])
+
+    def get_next_action(self, dialog_state):
+        if self.stored_action is not None:
+            return self.stored_action
+        else:
+            candidate_actions = self.get_candidate_actions(dialog_state)
+            q_values = [self.get_q(dialog_state, action) for action in candidate_actions]
+            max_q = max(q_values)
+            max_q_idx = q_values.index(max_q)
+            self.stored_action = candidate_actions[max_q_idx]
 
 
 if __name__ == '__main__':
