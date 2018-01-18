@@ -21,10 +21,14 @@ class AbstractPolicy(object):
         for predicate in dialog_state['current_predicates']:
             positive_scores += (dialog_state['decisions'][predicate] > 0) * dialog_state['current_kappas'][predicate]
             negative_scores += (dialog_state['decisions'][predicate] <= 0) * dialog_state['current_kappas'][predicate]
-        scores = positive_scores / (positive_scores + negative_scores)
-        scores = scores.tolist()
-        max_score = max(scores)
-        max_score_idx = scores.index(max_score)
+        if np.count_nonzero((positive_scores + negative_scores)) == 0:
+            max_score = 0
+            max_score_idx = np.random.choice(range(len(dialog_state['candidate_regions'])))
+        else:
+            scores = positive_scores / (positive_scores + negative_scores)
+            scores = scores.tolist()
+            max_score = max(scores)
+            max_score_idx = scores.index(max_score)
         action = {
                     'action' : 'make_guess',
                     'guess' : dialog_state['candidate_regions'][max_score_idx],
@@ -92,7 +96,7 @@ class AbstractPolicy(object):
                     possible_regions = self.get_label_question_regions(predicate, dialog_state)
                     min_margin_region = self.get_min_margin_region(predicate, possible_regions, dialog_state)
                     questions += [(predicate, min_margin_region)]
-            else:
+            elif len(predicates) > 0:
                 # If the beam is larger than the number of predicates, add the smallest number of questions per
                 # predicate that will make it longer than the beam
                 possible_questions = list()

@@ -35,13 +35,14 @@ class GuessPredictor:
         positive_scores = np.zeros(len(dialog_state['candidate_regions']))
         negative_scores = np.zeros(len(dialog_state['candidate_regions']))
         for predicate in dialog_state['decisions']:
-            if dialog_state['decisions'][predicate] > 0:
-                positive_scores += dialog_state['current_kappas'][predicate]
-            else:
-                negative_scores += dialog_state['current_kappas'][predicate]
-        scores = positive_scores / (positive_scores + negative_scores)
-        scores = scores.tolist()
-        return scores
+            positive_scores += (dialog_state['decisions'][predicate] > 0) * dialog_state['current_kappas'][predicate]
+            negative_scores += (dialog_state['decisions'][predicate] <= 0) * dialog_state['current_kappas'][predicate]
+        if np.count_nonzero((positive_scores + negative_scores)) == 0:
+            return np.zeros(len(dialog_state['candidate_regions']))
+        else:
+            scores = positive_scores / (positive_scores + negative_scores)
+            scores = scores.tolist()
+            return scores
 
     def get_features(self, dialog_state):
         feature_vector = list()

@@ -8,7 +8,9 @@ mkdir -p /scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/val
 
 cd ../src
 
-python StaticPolicy.py \
+python RLPolicy.py \
+    --model-type=mlp \
+    --candidate-questions-beam-size=10 \
     --save-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/policy.pkl
 
 python DialogAgent.py \

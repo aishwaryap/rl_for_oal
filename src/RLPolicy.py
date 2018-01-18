@@ -27,6 +27,7 @@ class RLPolicy(AbstractPolicy):
             self.q = SGDRegressor()
         else:
             raise NotImplementedError('Only model types available are \'mlp\' and \'linear\'')
+        self.untrained = True
 
         self.separate_guess_predictor = separate_guess_predictor
         self.guess_predictor = initial_guess_predictor
@@ -76,34 +77,55 @@ class RLPolicy(AbstractPolicy):
         feature_vector.append(float(self.on_topic))
 
         # Predicate has a classifier (0-1)
-        feature_vector.append(float(action['predicate'] in dialog_state['predicates_without_classifiers']))
+        if 'predicate' in action:
+            feature_vector.append(float(action['predicate'] in dialog_state['predicates_without_classifiers']))
+        else:
+            feature_vector.append(0.0)
 
         # Margin of object
-        data_point = np.array([dialog_state['candidate_regions_features'][action['region']]])
-        feature_vector.append(self.classifier_manager.get_margins(action['predicate'], data_point)[0])
+        if 'region' in action:
+            data_point = np.array([dialog_state['candidate_regions_features'][action['region']]])
+            feature_vector.append(self.classifier_manager.get_margins(action['predicate'], data_point)[0])
+        else:
+            feature_vector.append(0.0)
 
         # Density of object
-        feature_vector.append(dialog_state['candidate_regions_densities'][action['region']])
+        if 'region' in action:
+            feature_vector.append(dialog_state['candidate_regions_densities'][action['region']])
+        else:
+            feature_vector.append(0.0)
 
         # Fraction of k nearest neighbours of the object which are unlabelled
-        nbrs = [nbr for (nbr, sim) in dialog_state['candidate_regions_nbrs'][action['region']]]
-        labelled_regions = [region for (region, label_value) in dialog_state['labels_acquired']]
-        labelled_nbrs = [region for region in nbrs if region in labelled_regions]
-        feature_vector.append(len(labelled_nbrs) / float(len(nbrs)))
+        if 'region' in action:
+            nbrs = [nbr for (nbr, sim) in dialog_state['candidate_regions_nbrs'][action['region']]]
+            labelled_regions = [region for (region, label_value) in dialog_state['labels_acquired']]
+            labelled_nbrs = [region for region in nbrs if region in labelled_regions]
+            feature_vector.append(len(labelled_nbrs) / float(len(nbrs)))
+        else:
+            feature_vector.append(1.0)
 
         # Prev kappa of classifier of predicate
-        feature_vector.append(self.classifier_manager.get_kappa(action['predicate']))
+        if 'predicate' in action:
+            feature_vector.append(self.classifier_manager.get_kappa(action['predicate']))
+        else:
+            feature_vector.append(1.0)
 
         # Frequency of use of the predicate - normalized
-        feature_vector.append(dialog_state['predicate_uses'][action['predicate']] /
+        if 'predicate' in action:
+            feature_vector.append(dialog_state['predicate_uses'][action['predicate']] /
                               float(dialog_state['num_dialogs_completed']))
+        else:
+            feature_vector.append(1.0)
 
         # Number of system turns used - normalized
         feature_vector.append(dialog_state['num_system_turns'] / 10.0)
 
         # Frequency of use of the predicate - normalized
-        feature_vector.append(dialog_state['predicate_successes'][action['predicate']] /
+        if 'predicate' in action:
+            feature_vector.append(dialog_state['predicate_successes'][action['predicate']] /
                               float(dialog_state['predicate_uses'][action['predicate']]))
+        else:
+            feature_vector.append(1.0)
 
         return feature_vector
 
@@ -113,6 +135,8 @@ class RLPolicy(AbstractPolicy):
                self.get_example_question_candidates(dialog_state, self.candidate_questions_beam_size)
 
     def get_q(self, dialog_state, action):
+        if self.untrained:
+            return 0.0
         feature_vector = [self.get_features(dialog_state, action)]
         return self.q.predict(feature_vector)
 
@@ -128,6 +152,7 @@ class RLPolicy(AbstractPolicy):
             self.stored_action = None
             target_q = reward
         self.q.partial_fit([self.get_features(prev_dialog_state, next_action)], [target_q])
+        self.untrained = False
 
     def get_next_action(self, dialog_state):
         if self.stored_action is not None:
@@ -137,8 +162,7 @@ class RLPolicy(AbstractPolicy):
             q_values = [self.get_q(dialog_state, action) for action in candidate_actions]
             max_q = max(q_values)
             max_q_idx = q_values.index(max_q)
-            self.stored_action = candidate_actions[max_q_idx]
-
+            return candidate_actions[max_q_idx]
 
 if __name__ == '__main__':
     # Instantiates a static policy and saves it as a pickle
