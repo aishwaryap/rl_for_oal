@@ -148,12 +148,14 @@ class DialogAgent:
         self.classifiers_modified = None
 
     def update_decision_score(self, predicate):
-        decisions = self.classifier_manager.get_decisions(predicate, self.candidate_regions_features)
+        data_points = np.array([self.candidate_regions_features[region] for region in self.candidate_regions])
+        decisions = self.classifier_manager.get_decisions(predicate, data_points)
         self.decisions[predicate] = decisions
 
     def get_decision_scores(self):
+        data_points = np.array([self.candidate_regions_features[region] for region in self.candidate_regions])
         for predicate in self.current_predicates:
-            decisions = self.classifier_manager.get_decisions(predicate, self.candidate_regions_features)
+            decisions = self.classifier_manager.get_decisions(predicate, data_points)
             self.decisions[predicate] = decisions
 
     # Simulate the process of asking for an example
@@ -169,9 +171,11 @@ class DialogAgent:
             labels_acquired = [(region, 0) for region in self.candidate_regions]
         else:
             # Check which regions have been previously annotated as positive in this dialog
-            previous_positive_regions = [region for region in self.candidate_regions if (region, 1)
-                                         in self.labels_acquired[predicate]]
-            new_positive_regions = set(positive_regions).difference(previous_positive_regions)
+            previous_positive_regions = list()
+            if predicate in self.labels_acquired:
+                previous_positive_regions = [region for region in self.candidate_regions if (region, 1)
+                                             in self.labels_acquired[predicate]]
+            new_positive_regions = list(set(positive_regions).difference(previous_positive_regions))
             if len(new_positive_regions) < 1:
                 labels_acquired = [(region, 0) for region in self.candidate_regions if region
                                    not in previous_positive_regions]
@@ -185,7 +189,6 @@ class DialogAgent:
             self.labels_acquired[predicate] += labels_acquired
 
         self.classifier_manager.update_classifier(predicate, labels_acquired)
-        self.classifier_manager.update_kappa(predicate)
         self.update_decision_score(predicate)
 
         if predicate not in self.predicates_with_classifiers:
@@ -205,7 +208,6 @@ class DialogAgent:
             self.labels_acquired[predicate] += labels_acquired
 
         self.classifier_manager.update_classifier(predicate, labels_acquired)
-        self.classifier_manager.update_kappa(predicate)
         self.update_decision_score(predicate)
 
         if predicate not in self.predicates_with_classifiers:
