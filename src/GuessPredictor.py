@@ -35,8 +35,9 @@ class GuessPredictor:
         positive_scores = np.zeros(len(dialog_state['candidate_regions']))
         negative_scores = np.zeros(len(dialog_state['candidate_regions']))
         for predicate in dialog_state['decisions']:
-            positive_scores += (dialog_state['decisions'][predicate] > 0) * dialog_state['current_kappas'][predicate]
-            negative_scores += (dialog_state['decisions'][predicate] <= 0) * dialog_state['current_kappas'][predicate]
+            if predicate in dialog_state['current_kappas']:
+                positive_scores += (dialog_state['decisions'][predicate] > 0) * dialog_state['current_kappas'][predicate]
+                negative_scores += (dialog_state['decisions'][predicate] <= 0) * dialog_state['current_kappas'][predicate]
         if np.count_nonzero((positive_scores + negative_scores)) == 0:
             return np.zeros(len(dialog_state['candidate_regions']))
         else:

@@ -72,7 +72,6 @@ class ClassifiersManager:
         if classifier is None:
             classifier = self.get_initial_classifier()
 
-        new_val_labels = list()
         if predicate not in self.train_labels.keys():
             self.train_labels[predicate] = new_labels
             new_train_labels = new_labels
@@ -118,48 +117,54 @@ class ClassifiersManager:
         if classifier is not None and predicate in self.val_labels.keys():
             regions = [region for (region, label) in self.val_labels[predicate]]
             labels = [label for (region, label) in self.val_labels[predicate]]
-            features = None
-            for region in regions:
-                feature = self.feature_dict[region]
-                if features is None:
-                    features = feature
-                else:
-                    features = np.vstack((features, feature))
-            if len(features.shape) == 0:
-                features = np.expand_dims(features, 0)
-            preds = classifier.predict(features)
+            if len(set(labels)) == 2:
+                features = None
+                for region in regions:
+                    feature = self.feature_dict[region]
+                    if features is None:
+                        features = feature
+                    else:
+                        features = np.vstack((features, feature))
+                if len(features.shape) == 0:
+                    features = np.expand_dims(features, 0)
+                preds = classifier.predict(features)
 
-            # Compute Kappa and normalize to 0-1
-            kappa = (cohen_kappa_score(labels, preds) + 1.0) / 2.0
-            self.kappas[predicate] = kappa
+                # Compute Kappa and normalize to 0-1
+                kappa = (cohen_kappa_score(labels, preds, labels=[0, 1]) + 1.0) / 2.0
+                # print 'In compute_val_set_kappa, labels = ', labels, ', preds =', preds, ', kappa =', kappa, '; press enter'
+                # x = raw_input()
+                self.kappas[predicate] = kappa
 
     # Compute kappa by leave one out cross validation on train set
     def compute_crossval_kappa(self, predicate):
         if predicate in self.train_labels.keys():
             regions = [region for (region, label) in self.train_labels[predicate]]
             labels = [label for (region, label) in self.train_labels[predicate]]
-            features = None
-            for region in regions:
-                feature = np.array(self.feature_dict[region])
-                if features is None:
-                    features = feature
-                else:
-                    features = np.vstack((features, feature))
-            if len(features.shape) == 1:
-                features = np.expand_dims(features, 0)
+            if len(set(labels)) == 2:
+                features = None
+                for region in regions:
+                    feature = np.array(self.feature_dict[region])
+                    if features is None:
+                        features = feature
+                    else:
+                        features = np.vstack((features, feature))
+                if len(features.shape) == 1:
+                    features = np.expand_dims(features, 0)
 
-            preds = list()
-            for idx in range(len(labels)):
-                classifier = self.get_initial_classifier()
-                train_features = np.vstack((features[:idx, :], features[idx+1:, :]))
-                train_labels = np.array(labels[:idx] + labels[idx+1:])
-                if np.unique(train_labels).shape[0] == 2:
-                    classifier.fit(train_features, train_labels)
-                    pred = classifier.predict(features[idx, :])
-                    preds.append(pred)
-                else:
-                    preds.append(labels[idx])
+                preds = list()
+                for idx in range(len(labels)):
+                    classifier = self.get_initial_classifier()
+                    train_features = np.vstack((features[:idx, :], features[idx+1:, :]))
+                    train_labels = np.array(labels[:idx] + labels[idx+1:])
+                    if np.unique(train_labels).shape[0] == 2:
+                        classifier.fit(train_features, train_labels)
+                        pred = classifier.predict(features[idx, :].reshape(1, -1)).tolist()[0]
+                        preds.append(pred)
+                    else:
+                        preds.append(labels[idx])
 
-            # Compute Kappa and normalize to 0-1
-            kappa = (cohen_kappa_score(labels, preds) + 1.0) / 2.0
-            self.kappas[predicate] = kappa
+                # Compute Kappa and normalize to 0-1
+                kappa = (cohen_kappa_score(labels, preds, labels=[0, 1]) + 1.0) / 2.0
+                # print 'In compute_crossval_kappa, labels = ', labels, ', preds =', preds, ', kappa =', kappa, '; press enter'
+                # x = raw_input()
+                self.kappas[predicate] = kappa

@@ -97,8 +97,9 @@ class RLPolicy(AbstractPolicy):
 
         # Fraction of k nearest neighbours of the object which are unlabelled
         if 'region' in action:
+            print "dialog_state['labels_acquired'] =", dialog_state['labels_acquired']
             nbrs = [nbr for (nbr, sim) in dialog_state['candidate_regions_nbrs'][action['region']]]
-            labelled_regions = [region for (region, label_value) in dialog_state['labels_acquired']]
+            labelled_regions = [region for (region, label_value) in dialog_state['labels_acquired'].items()]
             labelled_nbrs = [region for region in nbrs if region in labelled_regions]
             feature_vector.append(len(labelled_nbrs) / float(len(nbrs)))
         else:
@@ -111,7 +112,7 @@ class RLPolicy(AbstractPolicy):
             feature_vector.append(1.0)
 
         # Frequency of use of the predicate - normalized
-        if 'predicate' in action:
+        if 'predicate' in action and action['predicate'] in dialog_state['predicate_uses']:
             feature_vector.append(dialog_state['predicate_uses'][action['predicate']] /
                               float(dialog_state['num_dialogs_completed']))
         else:
@@ -121,9 +122,10 @@ class RLPolicy(AbstractPolicy):
         feature_vector.append(dialog_state['num_system_turns'] / 10.0)
 
         # Frequency of use of the predicate - normalized
-        if 'predicate' in action:
+        if 'predicate' in action and action['predicate'] in dialog_state['predicate_successes'] \
+                and action['predicate'] in dialog_state['predicate_uses']:
             feature_vector.append(dialog_state['predicate_successes'][action['predicate']] /
-                              float(dialog_state['predicate_uses'][action['predicate']]))
+                                  float(dialog_state['predicate_uses'][action['predicate']]))
         else:
             feature_vector.append(1.0)
 

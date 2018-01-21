@@ -193,7 +193,7 @@ if __name__ == '__main__':
         densities_file = os.path.join(args.dataset_dir, 'densities/test/' + str(args.batch_num) + '.csv')
         nbrs_file = os.path.join(args.dataset_dir, 'nbrs/test/' + str(args.batch_num) + '.csv')
     else:
-        features_file = os.path.join(args.dataset_dir, 'classifiers/data/features/test/' + str(args.batch_num) + '.csv')
+        features_file = os.path.join(args.dataset_dir, 'classifiers/data/features/train/' + str(args.batch_num) + '.csv')
         densities_file = os.path.join(args.dataset_dir, 'densities/train/' + str(args.batch_num) + '.csv')
         nbrs_file = os.path.join(args.dataset_dir, 'nbrs/train/' + str(args.batch_num) + '.csv')
 

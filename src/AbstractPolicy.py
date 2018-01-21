@@ -38,7 +38,7 @@ class AbstractPolicy(object):
 
     # For a predicate, find regions that aren't labelled, either in the classifier manager or in the dialog
     def get_label_question_regions(self, predicate, dialog_state):
-        print '\n\t\tIn get_label_question_regions for', predicate
+        # print '\n\t\tIn get_label_question_regions for', predicate
         previously_labelled_regions = set()
         if predicate in self.classifier_manager.train_labels.keys():
             previously_labelled_regions.union([region for (region, label) in
@@ -51,7 +51,7 @@ class AbstractPolicy(object):
             regions_labelled_in_dialog = set([region for (region, label) in dialog_state['labels_acquired'][predicate]])
         output = [region for region in dialog_state['candidate_regions'] if region not in previously_labelled_regions
                   and region not in regions_labelled_in_dialog]
-        print '\n\n\nGot regions for', predicate
+        # print '\n\n\nGot regions for', predicate
         return output
 
     def get_min_margin_region(self, predicate, candidate_regions, dialog_state):
@@ -113,14 +113,17 @@ class AbstractPolicy(object):
                         margins = self.classifier_manager.get_margins(predicate, data_points)
                         margins_argsort = np.argsort(margins).tolist()
                         predicate_questions += [(predicate, region) for region in
-                                                possible_regions[margins_argsort[:num_regions_per_predicate]]]
+                                                [possible_regions[x] for x in margins_argsort[:num_regions_per_predicate]]]
                     possible_questions += predicate_questions
-                    probs += [prob_numerators[predicate_idx] / sum(prob_numerators)] * len(predicate_questions)
+                    probs += [prob_numerators[predicate_idx] / (sum(prob_numerators) * len(predicate_questions))] \
+                             * len(predicate_questions)
 
                 if beam_size > len(possible_questions):
                     questions = possible_questions
                 else:
-                    questions = np.random.choice(possible_questions, p=probs, size=beam_size, replace=False)
+                    question_indices = range(len(possible_questions))
+                    chosen_question_indices = np.random.choice(question_indices, p=probs, size=beam_size, replace=False)
+                    questions = [possible_questions[idx] for idx in chosen_question_indices]
 
         question_actions = [{'action' : 'ask_label', 'predicate': predicate, 'region' : region}
                             for (predicate, region) in questions]

@@ -32,20 +32,20 @@ class DialogAgent:
         self.seen_predicates_file = seen_predicates_file
         if os.path.isfile(self.seen_predicates_file):
             with open(self.seen_predicates_file) as handle:
-                self.seen_predicates = handle.read().split('\n')
+                self.seen_predicates = set(handle.read().split('\n'))
         else:
-            self.seen_predicates = list()
+            self.seen_predicates = set()
 
         # All predicates for which a classifier has been fitted
         self.predicates_with_classifiers_file = predicates_with_classifiers_file
         if os.path.isfile(self.predicates_with_classifiers_file):
             with open(self.predicates_with_classifiers_file) as handle:
-                self.predicates_with_classifiers = handle.read().split('\n')
+                self.predicates_with_classifiers = set(handle.read().split('\n'))
         else:
-            self.predicates_with_classifiers = list()
+            self.predicates_with_classifiers = set()
 
-        self.predicates_without_classifiers = list(set(self.seen_predicates).difference(
-                                                   self.predicates_with_classifiers))
+        self.predicates_without_classifiers = set(self.seen_predicates).difference(
+                                                  self.predicates_with_classifiers)
 
         # Fields to maintain dialog state
         self.candidate_regions = None       # Regions under discussion
@@ -95,10 +95,13 @@ class DialogAgent:
         # We can just tokenize to get predicates because descriptions have been preprocessed for stemming
         # and removing stopwords
         self.current_predicates = self.description.split('_')
-        self.seen_predicates += self.current_predicates
+        self.seen_predicates = self.seen_predicates.union(self.current_predicates)
+        for predicate in self.current_predicates:
+            if predicate not in self.predicates_with_classifiers:
+                self.predicates_without_classifiers.add(predicate)
 
         cur_time = datetime.now()
-        print 'Initial assignments: ' + str(cur_time - prev_time)
+        # print 'Initial assignments: ' + str(cur_time - prev_time)
         prev_time = datetime.now()
 
         self.candidate_regions_features = dict()
@@ -108,19 +111,19 @@ class DialogAgent:
             iter_prev_time = datetime.now()
             self.candidate_regions_features[region] = self.classifier_manager.feature_dict[region]
             iter_cur_time = datetime.now()
-            print '\t\tTime to fetch features = ' + str(iter_cur_time - iter_prev_time)
+            # print '\t\tTime to fetch features = ' + str(iter_cur_time - iter_prev_time)
             iter_prev_time = datetime.now()
             self.candidate_regions_densities[region] = self.classifier_manager.densities[region]
             iter_cur_time = datetime.now()
-            print '\t\tTime to fetch density = ' + str(iter_cur_time - iter_prev_time)
+            # print '\t\tTime to fetch density = ' + str(iter_cur_time - iter_prev_time)
             iter_prev_time = datetime.now()
             self.candidate_regions_nbrs[region] = self.classifier_manager.nbrs[region]
             iter_cur_time = datetime.now()
-            print '\t\tTime to fetch nbrs = ' + str(iter_cur_time - iter_prev_time)
+            # print '\t\tTime to fetch nbrs = ' + str(iter_cur_time - iter_prev_time)
             iter_prev_time = datetime.now()
 
         cur_time = datetime.now()
-        print 'Fetching region properties: ' + str(cur_time - prev_time)
+        # print 'Fetching region properties: ' + str(cur_time - prev_time)
         prev_time = datetime.now()
 
         self.classifiers_modified = self.current_predicates
@@ -131,7 +134,7 @@ class DialogAgent:
         self.classifiers_modified = list()
 
         cur_time = datetime.now()
-        print 'Completing setup: ' + str(cur_time - prev_time)
+        # print 'Completing setup: ' + str(cur_time - prev_time)
 
     def finish_task(self):
         # Precautions to make sure these get reset
@@ -182,6 +185,7 @@ class DialogAgent:
             else:
                 chosen_region = np.random.choice(new_positive_regions)
                 labels_acquired = [(chosen_region, 1)]
+        self.log('\tLabels acquired = ' + str(labels_acquired))
 
         if predicate not in self.labels_acquired:
             self.labels_acquired[predicate] = labels_acquired
@@ -192,7 +196,7 @@ class DialogAgent:
         self.update_decision_score(predicate)
 
         if predicate not in self.predicates_with_classifiers:
-            self.predicates_with_classifiers.append(predicate)
+            self.predicates_with_classifiers.add(predicate)
             self.predicates_without_classifiers.remove(predicate)
 
     # Simulate the process of asking for a predicate for a region
@@ -201,6 +205,7 @@ class DialogAgent:
             labels_acquired = [(region, 1)]
         else:
             labels_acquired = [(region, 0)]
+        self.log('\tLabels acquired = ' + str(labels_acquired))
 
         if predicate not in self.labels_acquired:
             self.labels_acquired[predicate] = labels_acquired
@@ -211,7 +216,7 @@ class DialogAgent:
         self.update_decision_score(predicate)
 
         if predicate not in self.predicates_with_classifiers:
-            self.predicates_with_classifiers.append(predicate)
+            self.predicates_with_classifiers.add(predicate)
             self.predicates_without_classifiers.remove(predicate)
 
     def get_dialog_state(self):
@@ -225,7 +230,7 @@ class DialogAgent:
         for predicate in self.current_predicates:
             dialog_state['current_kappas'][predicate] = self.classifier_manager.get_kappa(predicate)
         dialog_state['labels_acquired'] = copy.deepcopy(self.labels_acquired)
-        dialog_state['predicates_without_classifiers'] = self.predicates_without_classifiers
+        dialog_state['predicates_without_classifiers'] = list(self.predicates_without_classifiers)
         dialog_state['candidate_regions_features'] = self.candidate_regions_features
         dialog_state['candidate_regions_densities'] = self.candidate_regions_densities
         dialog_state['candidate_regions_nbrs'] = self.candidate_regions_nbrs
@@ -246,7 +251,7 @@ class DialogAgent:
                 self.predicate_uses[predicate] += 1
         if dialog_stats['success']:
             for predicate in self.current_predicates:
-                if predicate not in self.predicate_uses:
+                if predicate not in self.predicate_successes:
                     self.predicate_successes[predicate] = 1
                 else:
                     self.predicate_successes[predicate] += 1
@@ -274,9 +279,11 @@ class DialogAgent:
 
             prev_dialog_state = self.get_dialog_state()
             next_action = self.policy.get_next_action(prev_dialog_state)
+            self.log('Turn ' + str(self.num_system_turns) + ' action: ' + next_action['action'])
 
             reward = self.per_turn_reward
 
+            self.num_system_turns += 1
             if next_action['action'] == 'make_guess':
                 guess = next_action['guess']
                 if guess == target_region:
@@ -285,6 +292,8 @@ class DialogAgent:
                 else:
                     dialog_stats['success'] = 0
                     reward = self.failure_reward
+                self.log('\tGuess = ' + str(guess))
+                self.log('\tSuccess = ' + str(dialog_stats['success'] == 1))
                 dialog_complete = True
                 dialog_stats['num_system_turns'] = self.num_system_turns
 
@@ -297,7 +306,6 @@ class DialogAgent:
             else:
                 raise RuntimeError('Invalid action :' + str(next_action['action']))
 
-            self.num_system_turns += 1
             if self.num_system_turns >= self.max_turns:
                 dialog_complete = True
                 dialog_stats['success'] = 0
@@ -316,6 +324,7 @@ class DialogAgent:
             print 'Turn ' + str(self.num_system_turns - 1) \
                   + ' time = ' + format(datetime.now() - turn_start_time)
 
+        self.update_cross_dialog_stats(dialog_stats)
         self.finish_task()
 
         self.log('Dialog time = ' + format(datetime.now() - start_time))
