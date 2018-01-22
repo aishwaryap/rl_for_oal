@@ -99,7 +99,8 @@ class ExperimentRunner:
     def run_experiment(self, agent):
         domain_of_discourse = self.sample_domain_of_discourse()
         target_region = np.random.choice(domain_of_discourse)
-        description = self.region_descriptions[target_region]
+        # description = self.region_descriptions[target_region]
+        description = '_'.join(self.region_contents[target_region])
         contents = dict()
         for region in domain_of_discourse:
             contents[region] = self.region_contents[region]
