@@ -97,7 +97,7 @@ class RLPolicy(AbstractPolicy):
 
         # Fraction of k nearest neighbours of the object which are unlabelled
         if 'region' in action:
-            print "dialog_state['labels_acquired'] =", dialog_state['labels_acquired']
+            # print "dialog_state['labels_acquired'] =", dialog_state['labels_acquired']
             nbrs = [nbr for (nbr, sim) in dialog_state['candidate_regions_nbrs'][action['region']]]
             labelled_regions = [region for (region, label_value) in dialog_state['labels_acquired'].items()]
             labelled_nbrs = [region for region in nbrs if region in labelled_regions]

@@ -81,9 +81,12 @@ class ClassifiersManager:
             new_train_labels = new_labels
         else:
             random_nums = np.random.random(size=len(new_labels))
-            new_train_labels = [label for (label, idx) in enumerate(new_labels)
+            # print 'random_nums =', random_nums
+            # print 'new_labels =', new_labels
+            # print 'enumerate(new_labels) =', enumerate(new_labels)
+            new_train_labels = [label for (idx, label) in enumerate(new_labels)
                                 if random_nums[idx] > self.val_label_fraction]
-            new_val_labels = [label for (label, idx) in enumerate(new_labels)
+            new_val_labels = [label for (idx, label) in enumerate(new_labels)
                               if random_nums[idx] <= self.val_label_fraction]
             self.train_labels[predicate] += new_train_labels
             if predicate not in self.val_labels.keys():

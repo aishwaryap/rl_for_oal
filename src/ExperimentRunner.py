@@ -87,10 +87,11 @@ class ExperimentRunner:
 
     def sample_domain_of_discourse(self):
         # Sample number of regions from a truncated Gaussian
-        num_regions = int(math.floor(scipy.stats.truncnorm.rvs(
-            (self.min_regions - self.mean_regions) / self.std_dev_regions,
-            (self.max_regions - self.mean_regions) / self.std_dev_regions,
-            loc=self.mean_regions, scale=self.std_dev_regions, size=1)))
+        # num_regions = int(math.floor(scipy.stats.truncnorm.rvs(
+        #     (self.min_regions - self.mean_regions) / self.std_dev_regions,
+        #     (self.max_regions - self.mean_regions) / self.std_dev_regions,
+        #     loc=self.mean_regions, scale=self.std_dev_regions, size=1)))
+        num_regions = self.mean_regions
 
         # Sample num_regions uniformly without replacement
         regions = np.random.choice(self.batch_regions, num_regions)

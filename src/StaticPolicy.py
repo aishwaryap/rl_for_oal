@@ -25,59 +25,61 @@ class StaticPolicy(AbstractPolicy):
 
     # Returns True if asking for a positive example is currently a valid action
     def ask_example_valid(self, dialog_state):
-        predicates_queried = dialog_state['labels_acquired'].keys()
-        if self.on_topic:
-            candidates = set(dialog_state['current_predicates']).difference(predicates_queried)
-        else:
-            candidates = set(dialog_state['predicates_without_classifiers']).difference(predicates_queried)
-        print 'ask_example', len(candidates), 'candidates'
-        return len(candidates) > self.min_num_unknown_predicates
+        # predicates_queried = dialog_state['labels_acquired'].keys()
+        # if self.on_topic:
+        #     candidates = set(dialog_state['current_predicates']).difference(predicates_queried)
+        # else:
+        #     candidates = set(dialog_state['predicates_without_classifiers']).difference(predicates_queried)
+        # print 'ask_example', len(candidates), 'candidates'
+        # return len(candidates) > self.min_num_unknown_predicates
+        return len(self.get_example_question_candidates(dialog_state, beam_size=1)) > 0
 
     # Returns True if asking a yes-no question is currently a valid action
     def yes_no_valid(self, dialog_state):
-        if self.on_topic:
-            kappas = [kappa for (predicate, kappa) in self.classifier_manager.kappas.items()
-                      if predicate in dialog_state['current_predicates']]
-        else:
-            kappas = [kappa for (predicate, kappa) in self.classifier_manager.kappas.items()]
-        print 'kappas =', kappas
-        num_candidates = len(kappas) + len(dialog_state['predicates_without_classifiers'])
-        print 'yes_no', num_candidates, 'candidates'
-        if num_candidates == 0:
-            return False
-        avg_kappa = sum(kappas) / float(num_candidates)
-        print 'avg_kappa =', avg_kappa
-        return avg_kappa < self.max_avg_kappa
+        # if self.on_topic:
+        #     kappas = [kappa for (predicate, kappa) in self.classifier_manager.kappas.items()
+        #               if predicate in dialog_state['current_predicates']]
+        # else:
+        #     kappas = [kappa for (predicate, kappa) in self.classifier_manager.kappas.items()]
+        # print 'kappas =', kappas
+        # num_candidates = len(kappas) + len(dialog_state['predicates_without_classifiers'])
+        # print 'yes_no', num_candidates, 'candidates'
+        # if num_candidates == 0:
+        #     return False
+        # avg_kappa = sum(kappas) / float(num_candidates)
+        # print 'avg_kappa =', avg_kappa
+        # return avg_kappa < self.max_avg_kappa
+        return len(self.get_label_question_candidates(dialog_state, beam_size=1)) > 0
 
     def get_next_action(self, dialog_state):
-        print '\n\t\tIn get_next_action'
+        # print '\n\t\tIn get_next_action'
 
-        print "dialog_state['current_predicates'] =", dialog_state['current_predicates']
-        print "dialog_state['predicates_without_classifiers'] =", dialog_state['predicates_without_classifiers']
-        print "dialog_state['labels_acquired'] =", dialog_state['labels_acquired']
+        # print "dialog_state['current_predicates'] =", dialog_state['current_predicates']
+        # print "dialog_state['predicates_without_classifiers'] =", dialog_state['predicates_without_classifiers']
+        # print "dialog_state['labels_acquired'] =", dialog_state['labels_acquired']
 
         start_time = datetime.now()
 
         if dialog_state['num_system_turns'] >= self.max_questions:
-            print 'Hit max questions'
+            # print 'Hit max questions'
             prev_time = datetime.now()
             next_action = self.get_guess(dialog_state)
             cur_time = datetime.now()
             # print 'Time to evaluate guess =', str(cur_time - prev_time)
 
         else:
-            print 'Didn\'t hit max questions'
+            # print 'Didn\'t hit max questions'
             prev_time = datetime.now()
             ask_example_valid = self.ask_example_valid(dialog_state)
             cur_time = datetime.now()
             # print 'Evaluating ask_example_valid =', str(cur_time - prev_time)
-            print 'ask_example_valid =', ask_example_valid
+            # print 'ask_example_valid =', ask_example_valid
 
             prev_time = datetime.now()
             yes_no_valid = self.yes_no_valid(dialog_state)
             cur_time = datetime.now()
             # print 'Evaluating yes_no_valid =', str(cur_time - prev_time)
-            print 'yes_no_valid =', yes_no_valid
+            # print 'yes_no_valid =', yes_no_valid
 
             if ask_example_valid and yes_no_valid:
                 r = random.random()
@@ -110,7 +112,7 @@ class StaticPolicy(AbstractPolicy):
         cur_time = datetime.now()
         # print 'Total time to get action =', str(cur_time - start_time), '\n'
 
-        print 'Next action: ', next_action['action'], '; press enter:'
+        # print 'Next action: ', next_action['action'], '; press enter:'
         # x = raw_input()
 
         return next_action
@@ -120,7 +122,7 @@ if __name__ == '__main__':
     # Instantiates a static policy and saves it as a pickle
     arg_parser = ArgumentParser()
 
-    arg_parser.add_argument('--max-questions', type=int, default=5,
+    arg_parser.add_argument('--max-questions', type=int, default=15,
                             help='Max questions before guessing')
     arg_parser.add_argument('--yes-no-prob', type=float, default=0.7,
                             help='Probability of a question being a yes-no, when both types are valid')

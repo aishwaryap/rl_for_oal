@@ -224,6 +224,7 @@ class DialogAgent:
         dialog_state['num_system_turns'] = self.num_system_turns
         dialog_state['decisions'] = copy.deepcopy(self.decisions)
         dialog_state['current_predicates'] = self.current_predicates
+        dialog_state['seen_predicates'] = self.seen_predicates
         dialog_state['candidate_regions'] = self.candidate_regions
         dialog_state['target_region'] = self.target_region
         dialog_state['current_kappas'] = dict()
@@ -368,7 +369,7 @@ if __name__ == '__main__':
                             help='Reward for successful dialog')
     arg_parser.add_argument('--failure-reward', type=float, default=-100,
                             help='Reward for failed dialog')
-    arg_parser.add_argument('--max-turns', type=int, default=1000,
+    arg_parser.add_argument('--max-turns', type=int, default=100,
                             help='Terminate the dialog after this many turns')
 
     args = arg_parser.parse_args()
