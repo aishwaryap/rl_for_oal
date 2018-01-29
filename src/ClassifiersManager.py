@@ -6,6 +6,7 @@ import pylru
 import os
 from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import cohen_kappa_score
+import ast
 
 from KeyedFileDict import KeyedFileDict
 
@@ -23,13 +24,14 @@ class ClassifiersManager:
 
         # Create LRU caches for accessing classifiers, labels and kappas
         classifiers_dict = KeyedFileDict(classifiers_dir, loading_mode='pickle')
-        #self.classifiers = pylru.WriteThroughCacheManager(classifiers_dict, classifiers_cache_size)
-        self.classifiers = classifiers_dict
+        self.classifiers = pylru.WriteThroughCacheManager(classifiers_dict, classifiers_cache_size)
+        # self.classifiers = classifiers_dict
 
+        self.kappas_file = kappas_file
         self.kappas = dict()
         if os.path.isfile(kappas_file):
             with open(kappas_file) as handle:
-                self.kappas = dict([tuple(line.split(',')) for line in handle.read().split('\n')])
+                ast.literal_eval(handle.read().strip())
 
         train_labels_dict = KeyedFileDict(train_labels_dir, loading_mode='pickle')
         self.train_labels = pylru.WriteThroughCacheManager(train_labels_dict, labels_cache_size)
@@ -134,7 +136,8 @@ class ClassifiersManager:
 
                 # Compute Kappa and normalize to 0-1
                 kappa = (cohen_kappa_score(labels, preds, labels=[0, 1]) + 1.0) / 2.0
-                # print 'In compute_val_set_kappa, labels = ', labels, ', preds =', preds, ', kappa =', kappa, '; press enter'
+                # print 'In compute_val_set_kappa, labels = ', labels, ', preds =', preds, ', kappa =', kappa,
+                # print 'press enter'
                 # x = raw_input()
                 self.kappas[predicate] = kappa
 
@@ -168,6 +171,11 @@ class ClassifiersManager:
 
                 # Compute Kappa and normalize to 0-1
                 kappa = (cohen_kappa_score(labels, preds, labels=[0, 1]) + 1.0) / 2.0
-                # print 'In compute_crossval_kappa, labels = ', labels, ', preds =', preds, ', kappa =', kappa, '; press enter'
+                # print 'In compute_crossval_kappa, labels = ', labels, ', preds =', preds, ', kappa =', kappa,
+                # print 'press enter'
                 # x = raw_input()
                 self.kappas[predicate] = kappa
+
+    def save(self):
+        with open(self.kappas_file, 'w') as handle:
+            handle.write(str(self.kappas))

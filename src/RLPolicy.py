@@ -166,6 +166,7 @@ class RLPolicy(AbstractPolicy):
             max_q_idx = q_values.index(max_q)
             return candidate_actions[max_q_idx]
 
+
 if __name__ == '__main__':
     # Instantiates a static policy and saves it as a pickle
     arg_parser = ArgumentParser()

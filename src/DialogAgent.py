@@ -257,7 +257,7 @@ class DialogAgent:
                 else:
                     self.predicate_successes[predicate] += 1
 
-    def run_dialog(self, candidate_regions, target_region, description, region_contents):
+    def run_dialog(self, candidate_regions, target_region, description, region_contents, testing=False):
         start_time = datetime.now()
 
         self.log('candidate_regions = ' + str(candidate_regions))
@@ -318,7 +318,8 @@ class DialogAgent:
             else:
                 next_dialog_state = self.get_dialog_state()
 
-            self.policy.update(prev_dialog_state, next_action, next_dialog_state, reward)
+            if not testing:
+                self.policy.update(prev_dialog_state, next_action, next_dialog_state, reward)
 
             self.log('Turn ' + str(self.num_system_turns - 1)
                      + ' time = ' + format(datetime.now() - turn_start_time))
@@ -340,7 +341,9 @@ class DialogAgent:
         with open(self.predicates_with_classifiers_file, 'w') as handle:
             handle.write('\n'.join(self.predicates_with_classifiers))
 
+        self.classifier_manager.save()
         self.classifier_manager = None
+        self.policy.save()
         self.policy.classifier_manager = None
         with open(save_filename, 'wb') as save_file:
             pickle.dump(self, save_file)
