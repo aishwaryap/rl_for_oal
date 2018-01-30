@@ -41,11 +41,9 @@ if __name__ == '__main__':
     classifiers_manager = ClassifiersManager(features_dict, args.classifiers_dir, args.kappas_file, args.train_labels_dir,
                                              args.val_labels_dir, None, None, 1, 1, 1, 1, 1)
 
-    kappas = dict()
     for predicate in classifiers_manager.train_labels.keys():
-        kappa = classifiers_manager.compute_crossval_kappa(predicate)
-        kappas[predicate] = kappa
-        print 'kappa[', predicate, '] =', kappa
+        classifiers_manager.compute_crossval_kappa(predicate)
+        print 'kappa[', predicate, '] =', classifiers_manager.get_kappa(predicate)
 
     with open(args.kappas_file, 'w') as handle:
-        handle.write(str(kappas))
+        handle.write(str(classifiers_manager.kappas))
