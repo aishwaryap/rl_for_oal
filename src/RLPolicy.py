@@ -202,5 +202,6 @@ if __name__ == '__main__':
             initial_guess_predictor = pickle.load(handle)
 
     policy = RLPolicy(args.save_file, args.on_topic, None, args.model_type, args.separate_guess_predictor,
-                      args.gamma, args.candidate_questions_beam_size, initial_guess_predictor)
+                      args.gamma, args.candidate_questions_beam_size,
+                      args.min_prob_weight, args.max_prob_weight, args.max_prob_kappa, initial_guess_predictor)
     policy.save()
