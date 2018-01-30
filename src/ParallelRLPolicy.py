@@ -12,13 +12,11 @@ from argparse import ArgumentParser
 __author__ = 'aishwarya'
 
 
-class RLPolicy(AbstractPolicy):
+class ParallelRLPolicy(AbstractPolicy):
     # This should have the same classifier manager as the dialog agent
     def __init__(self, save_file, on_topic, classifier_manager, model_type, separate_guess_predictor, gamma,
-                 candidate_questions_beam_size, min_prob_weight, max_prob_weight, max_prob_kappa,
-                 initial_guess_predictor=None):
-        super(RLPolicy, self).__init__(save_file, on_topic, classifier_manager, min_prob_weight,
-                                       max_prob_weight, max_prob_kappa)
+                 candidate_questions_beam_size, initial_guess_predictor=None):
+        super(ParallelRLPolicy, self).__init__(save_file, on_topic, classifier_manager)
 
         self.gamma = gamma
         self.candidate_questions_beam_size = candidate_questions_beam_size
@@ -144,7 +142,7 @@ class RLPolicy(AbstractPolicy):
         feature_vector = [self.get_features(dialog_state, action)]
         return self.q.predict(feature_vector)
 
-    def update(self, prev_dialog_state, next_action, next_dialog_state, reward):
+    def compute_update(self, prev_dialog_state, next_action, next_dialog_state, reward):
         if next_dialog_state is not None:
             next_state_candidate_actions = self.get_candidate_actions(next_dialog_state)
             q_values = [self.get_q(next_dialog_state, action) for action in next_state_candidate_actions]
@@ -155,7 +153,10 @@ class RLPolicy(AbstractPolicy):
         else:
             self.stored_action = None
             target_q = reward
-        self.q.partial_fit([self.get_features(prev_dialog_state, next_action)], [target_q])
+        return (self.get_features(prev_dialog_state, next_action), target_q)
+
+    def perform_updates(self, feature_vectors, target_q_values):
+        self.q.partial_fit(feature_vectors, target_q_values)
         self.untrained = False
 
     def get_next_action(self, dialog_state):
@@ -185,12 +186,6 @@ if __name__ == '__main__':
                             help='Add this argument to limit number of questions considered to some integer')
     arg_parser.add_argument('--on-topic', action="store_true", default=False,
                             help='Ask only on topic questions')
-    arg_parser.add_argument('--min-prob-weight', type=float, default=1.0,
-                            help='Probability for kappa=0 and kappa=1')
-    arg_parser.add_argument('--max-prob-weight', type=float, default=100.0,
-                            help='Probability for peak point')
-    arg_parser.add_argument('--max-prob-kappa', type=float, default=0.8,
-                            help='Kappa at which distribution peaks')
     arg_parser.add_argument('--save-file', type=str, required=True,
                             help='File to save pickled policy')
 

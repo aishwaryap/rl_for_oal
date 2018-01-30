@@ -9,7 +9,7 @@ mkdir -p /scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/val
 cd ../src
 
 python RLPolicy.py \
-    --model-type=mlp \
+    --model-type=linear \
     --candidate-questions-beam-size=10 \
     --save-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/policy.pkl
 
@@ -29,6 +29,6 @@ python ExperimentRunner.py \
     --train-labels-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/train \
     --val-labels-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/val \
     --agent-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/dialog_agent.pkl \
-    --num-dialogs=1000 \
+    --num-dialogs=10 \
     --batch-num=0
 

@@ -10,10 +10,23 @@ __author__ = 'aishwarya'
 
 
 class AbstractPolicy(object):
-    def __init__(self, save_file, on_topic, classifier_manager):
+    def __init__(self, save_file, on_topic, classifier_manager, min_prob_weight, max_prob_weight,
+                 max_prob_kappa):
         self.on_topic = on_topic
         self.classifier_manager = classifier_manager
         self.save_file = save_file
+        self.min_prob_weight = min_prob_weight
+        self.max_prob_weight = max_prob_weight
+        self.max_prob_kappa = max_prob_kappa
+
+    def get_prob_weight(self, predicate):
+        kappa = self.classifier_manager.get_kappa(predicate)
+        if kappa < self.max_prob_kappa:
+            return self.min_prob_weight + (
+                (kappa / self.max_prob_kappa) * float(self.max_prob_weight - self.min_prob_weight))
+        else:
+            return self.min_prob_weight + (
+                ((1.0 - kappa) / (1.0 - self.max_prob_kappa)) * float(self.max_prob_weight - self.min_prob_weight))
 
     def get_guess(self, dialog_state):
         positive_scores = np.zeros(len(dialog_state['candidate_regions']))
@@ -30,9 +43,9 @@ class AbstractPolicy(object):
             max_score = max(scores)
             max_score_idx = scores.index(max_score)
         action = {
-                    'action' : 'make_guess',
-                    'guess' : dialog_state['candidate_regions'][max_score_idx],
-                    'score' : max_score
+                    'action': 'make_guess',
+                    'guess': dialog_state['candidate_regions'][max_score_idx],
+                    'score': max_score
                   }
         return action
 
@@ -70,17 +83,18 @@ class AbstractPolicy(object):
             known_cur_dialog_predicates = [predicate for predicate in dialog_state['current_predicates']
                                            if predicate in self.classifier_manager.kappas.keys()]
             predicates = unknown_cur_dialog_predicates + known_cur_dialog_predicates
-            prob_numerators = [1.0] * len(unknown_cur_dialog_predicates) + \
-                              [(100.0 + 100*self.classifier_manager.kappas[predicate])
-                               for predicate in known_cur_dialog_predicates]
+            # prob_numerators = [1.0] * len(unknown_cur_dialog_predicates) + \
+            #                   [(100.0 + 100*self.classifier_manager.kappas[predicate])
+            #                    for predicate in known_cur_dialog_predicates]
         else:
             known_predicates = [predicate for predicate in self.classifier_manager.kappas.keys()]
             predicates = dialog_state['predicates_without_classifiers'] + known_predicates
             # Sample a predicate with probability proportional to 1 - confidence in lowest confidence object
-            prob_numerators = [1.0] * len(dialog_state['predicates_without_classifiers']) + \
-                              [(100.0 + 100*self.classifier_manager.kappas[predicate]) for predicate in known_predicates]
+            # prob_numerators = [1.0] * len(dialog_state['predicates_without_classifiers']) + \
+            # [(100.0 + 100*self.classifier_manager.kappas[predicate]) for predicate in known_predicates]
 
         # print '\t\t\tpredicates =', predicates
+        prob_numerators = [self.get_prob_weight(predicate) for predicate in predicates]
 
         questions = list()
         if beam_size is None:
@@ -181,3 +195,6 @@ class AbstractPolicy(object):
         self.classifier_manager = None
         with open(self.save_file, 'wb') as handle:
             pickle.dump(self, handle)
+
+    def compute_update(self, prev_dialog_state, next_action, next_dialog_state, reward):
+        pass

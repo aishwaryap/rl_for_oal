@@ -132,6 +132,12 @@ if __name__ == '__main__':
                             help='Min number of unknown predicates to have before asking for positive examples')
     arg_parser.add_argument('--on-topic', action="store_true", default=False,
                             help='Ask only on topic questions')
+    arg_parser.add_argument('--min-prob-weight', type=float, default=1.0,
+                            help='Probability for kappa=0 and kappa=1')
+    arg_parser.add_argument('--max-prob-weight', type=float, default=100.0,
+                            help='Probability for peak point')
+    arg_parser.add_argument('--max-prob-kappa', type=float, default=0.8,
+                            help='Kappa at which distribution peaks')
     arg_parser.add_argument('--save-file', type=str, required=True,
                             help='File to save pickled policy')
 

@@ -60,7 +60,6 @@ class DialogAgent:
         self.candidate_regions_nbrs = None      # Nearest neighbours of candidate regions
         self.candidate_regions_densities = None # Densities of candidate regions
         self.region_contents = None             # Objects and attributes in candidate regions
-        self.classifiers_modified = None        # Classifiers that have been modified within this dialog (optimization)
 
         # Labels acquired (within dialog)
         # This is a dict with label name as key, and (region_id, 0/1 label value) as value
@@ -126,12 +125,9 @@ class DialogAgent:
         # print 'Fetching region properties: ' + str(cur_time - prev_time)
         prev_time = datetime.now()
 
-        self.classifiers_modified = self.current_predicates
         self.decisions = dict()
         self.get_decision_scores()
-
         self.labels_acquired = dict()
-        self.classifiers_modified = list()
 
         cur_time = datetime.now()
         # print 'Completing setup: ' + str(cur_time - prev_time)
@@ -148,7 +144,6 @@ class DialogAgent:
         self.candidate_regions_nbrs = None
         self.region_contents = None
         self.labels_acquired = None
-        self.classifiers_modified = None
 
     def update_decision_score(self, predicate):
         data_points = np.array([self.candidate_regions_features[region] for region in self.candidate_regions])
@@ -192,12 +187,22 @@ class DialogAgent:
         else:
             self.labels_acquired[predicate] += labels_acquired
 
-        self.classifier_manager.update_classifier(predicate, labels_acquired)
-        self.update_decision_score(predicate)
+        # self.classifier_manager.update_classifier(predicate, labels_acquired)
+        # self.update_decision_score(predicate)
 
-        if predicate not in self.predicates_with_classifiers:
-            self.predicates_with_classifiers.add(predicate)
-            self.predicates_without_classifiers.remove(predicate)
+        # if predicate not in self.predicates_with_classifiers:
+        #     self.predicates_with_classifiers.add(predicate)
+        #     self.predicates_without_classifiers.remove(predicate)
+
+    # Update classifiers with labels acquired in this dialog
+    def perform_dialog_classifier_updates(self):
+        for predicate in self.labels_acquired:
+            self.classifier_manager.update_classifier(predicate, self.labels_acquired)
+            self.update_decision_score(predicate)
+
+            if predicate not in self.predicates_with_classifiers:
+                self.predicates_with_classifiers.add(predicate)
+                self.predicates_without_classifiers.remove(predicate)
 
     # Simulate the process of asking for a predicate for a region
     def ask_label(self, predicate, region):
@@ -212,12 +217,12 @@ class DialogAgent:
         else:
             self.labels_acquired[predicate] += labels_acquired
 
-        self.classifier_manager.update_classifier(predicate, labels_acquired)
-        self.update_decision_score(predicate)
-
-        if predicate not in self.predicates_with_classifiers:
-            self.predicates_with_classifiers.add(predicate)
-            self.predicates_without_classifiers.remove(predicate)
+        # self.classifier_manager.update_classifier(predicate, labels_acquired)
+        # self.update_decision_score(predicate)
+        #
+        # if predicate not in self.predicates_with_classifiers:
+        #     self.predicates_with_classifiers.add(predicate)
+        #     self.predicates_without_classifiers.remove(predicate)
 
     def get_dialog_state(self):
         dialog_state = dict()
@@ -326,6 +331,7 @@ class DialogAgent:
             print 'Turn ' + str(self.num_system_turns - 1) \
                   + ' time = ' + format(datetime.now() - turn_start_time)
 
+        self.perform_dialog_classifier_updates()
         self.update_cross_dialog_stats(dialog_stats)
         self.finish_task()
 
@@ -386,4 +392,3 @@ if __name__ == '__main__':
                                args.success_reward, args.failure_reward, args.max_turns,
                                args.log_filename)
     dialog_agent.save(args.save_file)
-
