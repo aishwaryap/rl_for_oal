@@ -34,7 +34,6 @@ class ExperimentRunner:
         self.std_dev_regions = std_dev_regions
 
         prev_time = datetime.now()
-        all_regions = None
         if self.testing:
             regions_filename = os.path.join(self.dataset_dir, 'classifiers/data/test_regions.txt')
         else:
@@ -97,7 +96,7 @@ class ExperimentRunner:
         regions = np.random.choice(self.batch_regions, num_regions)
         return regions
 
-    def run_experiment(self, agent):
+    def run_experiment(self, agent, testing=False):
         domain_of_discourse = self.sample_domain_of_discourse()
         target_region = np.random.choice(domain_of_discourse)
         # description = self.region_descriptions[target_region]
@@ -105,13 +104,13 @@ class ExperimentRunner:
         contents = dict()
         for region in domain_of_discourse:
             contents[region] = self.region_contents[region]
-        dialog_stats = agent.run_dialog(domain_of_discourse, target_region, description, contents)
+        dialog_stats = agent.run_dialog(domain_of_discourse, target_region, description, contents, testing)
         self.dialog_stats_writer.writerow(dialog_stats)
 
-    def run_experiments(self, agent, num_dialogs):
+    def run_experiments(self, agent, num_dialogs, testing=False):
         for i in range(num_dialogs):
             print 'Running experiment', i
-            self.run_experiment(agent)
+            self.run_experiment(agent, testing)
 
     def finish(self):
         self.dialog_stats_file.close()
@@ -129,8 +128,6 @@ if __name__ == '__main__':
     arg_parser.add_argument('--dialog-stats-filename', type=str, required=True,
                             help='File to store dialog stats')
 
-    arg_parser.add_argument('--testing', action="store_true", default=False,
-                            help='Add this flag to indicate that these are test dialogs')
     arg_parser.add_argument('--min-regions', type=int, default=3,
                             help='Min regions in discourse')
     arg_parser.add_argument('--max-regions', type=int, default=20,
@@ -166,7 +163,8 @@ if __name__ == '__main__':
     arg_parser.add_argument('--max-labels-in-val-set', type=int, default=1000,
                             help='Max val set size')
 
-    # Agent file and num dialogs for test (this may have to be modified)
+    arg_parser.add_argument('--testing', action="store_true", default=False,
+                            help='Add this flag to indicate that these are test dialogs')
     arg_parser.add_argument('--agent-file', type=str, required=True,
                             help='File with pickled agent')
     arg_parser.add_argument('--num-dialogs', type=int, required=True,
@@ -174,6 +172,13 @@ if __name__ == '__main__':
 
     arg_parser.add_argument('--batch-num', type=int, required=True,
                             help='Batch of regions to use')
+
+    arg_parser.add_argument('--test-seen-predicates-file', type=str, required=True,
+                            help='File to use for seen predicates during testing')
+    arg_parser.add_argument('--test-predicates-with-classifiers-file', type=str, required=True,
+                            help='File to use for predicates with classifiers during testing')
+    arg_parser.add_argument('--test-log-file', type=str, required=True,
+                            help='File to log during testing')
 
     args = arg_parser.parse_args()
 
@@ -258,11 +263,15 @@ if __name__ == '__main__':
     dialog_agent.classifier_manager = classifiers_manager
     dialog_agent.policy.classifier_manager = classifiers_manager
 
+    if args.testing:
+        dialog_agent.reset_for_test(args.test_seen_predicates_file, args.test_predicates_with_classifiers_file,
+                                    args.test_log_file)
+
     cur_time = datetime.now()
     print 'Loading dialog agent: ', str(cur_time - prev_time)
     prev_time = cur_time
 
-    experiment_runner.run_experiments(dialog_agent, args.num_dialogs)
+    experiment_runner.run_experiments(dialog_agent, args.num_dialogs, args.testing)
 
     cur_time = datetime.now()
     print 'Running dialogs: ', str(cur_time - prev_time)

@@ -97,6 +97,8 @@ class ClassifiersManager:
                 self.val_labels[predicate] += new_val_labels
 
         if len(new_train_labels) > 0:
+            # print 'predicate =', predicate
+            # print 'new_train_labels =', new_train_labels
             regions = [region for (region, label) in new_train_labels]
             labels = [label for (region, label) in new_train_labels]
             features = None

@@ -7,11 +7,13 @@ import csv
 import matplotlib.pyplot as plt
 import pickle
 import operator
+import sys
 
 
 def plot_graphs(args):
     all_avg_success = dict()
     all_avg_len = dict()
+    min_stats_length = sys.maxint
     for agent_name in args.agent_names:
         dialog_stats_file = os.path.join(*[args.output_path, agent_name, 'stats.txt'])
         avg_success = list()
@@ -29,13 +31,15 @@ def plot_graphs(args):
                     stats_beam.append(row)
         all_avg_success[agent_name] = avg_success
         all_avg_len[agent_name] = avg_len
+        print 'agent_name =', agent_name, ', len(avg_success) =', len(avg_success)
+        min_stats_length = min(min_stats_length, len(avg_success))
 
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 
     plt.figure()
     lines = list()
     for (idx, agent_name) in enumerate(args.agent_names):
-        line, = plt.plot(all_avg_success[agent_name], colors[idx], label=agent_name)
+        line, = plt.plot(all_avg_success[agent_name][:min_stats_length], colors[idx], label=agent_name)
         lines.append(line)
     # plt.legend(lines, args.agent_names)
     plt.legend(bbox_to_anchor=(0, 0), loc='lower left')
@@ -45,7 +49,7 @@ def plot_graphs(args):
     plt.figure()
     lines = list()
     for (idx, agent_name) in enumerate(args.agent_names):
-        line, = plt.plot(all_avg_len[agent_name], colors[idx], label=agent_name)
+        line, = plt.plot(all_avg_len[agent_name][:min_stats_length], colors[idx], label=agent_name)
         lines.append(line)
     # plt.legend(lines, args.agent_names)
     plt.legend(bbox_to_anchor=(1, 1))
@@ -102,7 +106,7 @@ if __name__ == '__main__':
 
     arg_parser.add_argument('--plot-graphs', action="store_true", default=False,
                             help='Plot success and len graphs')
-    arg_parser.add_argument('--averaging-beam', type=int, default=1000,
+    arg_parser.add_argument('--averaging-beam', type=int, default=100,
                             help='Number of dialogs to successively average over')
     arg_parser.add_argument('--success-image-file', type=str, default=None,
                             help='File to save plot of successes')

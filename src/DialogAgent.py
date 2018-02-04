@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Functions useful to all dialog agents
+# General dialog agent
 
 import numpy as np
 import copy
@@ -71,6 +71,35 @@ class DialogAgent:
         self.total_num_system_turns = 0     # Number of system turns across all dialogs
         self.predicate_uses = dict()        # Number of times a predicate has occurred in target descriptions
         self.predicate_successes = dict()   # Number of successful dialogs per predicate in target descriptions
+
+        self.log_filename = log_filename
+
+    def reset_for_test(self, seen_predicates_file, predicates_with_classifiers_file, log_filename):
+        # All predicates the agent has ever seen
+        self.seen_predicates_file = seen_predicates_file
+        if os.path.isfile(self.seen_predicates_file):
+            with open(self.seen_predicates_file) as handle:
+                self.seen_predicates = set(handle.read().split('\n'))
+        else:
+            self.seen_predicates = set()
+
+        # All predicates for which a classifier has been fitted
+        self.predicates_with_classifiers_file = predicates_with_classifiers_file
+        if os.path.isfile(self.predicates_with_classifiers_file):
+            with open(self.predicates_with_classifiers_file) as handle:
+                self.predicates_with_classifiers = set(handle.read().split('\n'))
+        else:
+            self.predicates_with_classifiers = set()
+
+        self.predicates_without_classifiers = set(self.seen_predicates).difference(
+            self.predicates_with_classifiers)
+
+        # Some cross dialog stats that the agent accumulates over time
+        self.num_dialogs_completed = 0
+        self.num_dialogs_successful = 0
+        self.total_num_system_turns = 0  # Number of system turns across all dialogs
+        self.predicate_uses = dict()  # Number of times a predicate has occurred in target descriptions
+        self.predicate_successes = dict()  # Number of successful dialogs per predicate in target descriptions
 
         self.log_filename = log_filename
 
@@ -197,7 +226,7 @@ class DialogAgent:
     # Update classifiers with labels acquired in this dialog
     def perform_dialog_classifier_updates(self):
         for predicate in self.labels_acquired:
-            self.classifier_manager.update_classifier(predicate, self.labels_acquired)
+            self.classifier_manager.update_classifier(predicate, self.labels_acquired[predicate])
             self.update_decision_score(predicate)
 
             if predicate not in self.predicates_with_classifiers:
@@ -346,8 +375,9 @@ class DialogAgent:
 
         with open(self.predicates_with_classifiers_file, 'w') as handle:
             handle.write('\n'.join(self.predicates_with_classifiers))
-
-        self.classifier_manager.save()
+        
+        if self.classifier_manager is not None:
+            self.classifier_manager.save()
         self.classifier_manager = None
         self.policy.save()
         self.policy.classifier_manager = None

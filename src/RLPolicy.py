@@ -156,6 +156,8 @@ class RLPolicy(AbstractPolicy):
             self.stored_action = None
             target_q = reward
         self.q.partial_fit([self.get_features(prev_dialog_state, next_action)], [target_q])
+        if self.separate_guess_predictor:
+            self.guess_predictor.update(prev_dialog_state)
         self.untrained = False
 
     def get_next_action(self, dialog_state):
