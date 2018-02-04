@@ -1,11 +1,7 @@
 AGENT_NAME=$1
 TEST_DIR=$AGENT_NAME"_test"
 
-mkdir -p /scratch/cluster/aish/rl_for_oal/$TEST_DIR/
-mkdir -p /scratch/cluster/aish/rl_for_oal/$TEST_DIR/classifiers
-mkdir -p /scratch/cluster/aish/rl_for_oal/$TEST_DIR/labels
-mkdir -p /scratch/cluster/aish/rl_for_oal/$TEST_DIR/labels/train
-mkdir -p /scratch/cluster/aish/rl_for_oal/$TEST_DIR/labels/val
+./create_agent_dirs.sh $TEST_DIR
 
 cd ../src
 
