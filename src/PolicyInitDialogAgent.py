@@ -6,6 +6,9 @@ from datetime import datetime
 from argparse import ArgumentParser
 import pickle
 
+# Imports for unpickling
+from StaticPolicy import StaticPolicy
+from RLPolicy import RLPolicy
 
 class PolicyInitDialogAgent(DialogAgent):
     def __init__(self, agent_name, classifier_manager, source_policy, target_policy, seen_predicates_file,

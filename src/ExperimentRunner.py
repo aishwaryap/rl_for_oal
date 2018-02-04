@@ -17,6 +17,7 @@ from datetime import datetime
 
 # Imports for unpickling
 from DialogAgent import DialogAgent
+from PolicyInitDialogAgent import PolicyInitDialogAgent
 
 __author__ = 'aishwarya'
 
@@ -173,11 +174,11 @@ if __name__ == '__main__':
     arg_parser.add_argument('--batch-num', type=int, required=True,
                             help='Batch of regions to use')
 
-    arg_parser.add_argument('--test-seen-predicates-file', type=str, required=True,
+    arg_parser.add_argument('--test-seen-predicates-file', type=str, default=None,
                             help='File to use for seen predicates during testing')
-    arg_parser.add_argument('--test-predicates-with-classifiers-file', type=str, required=True,
+    arg_parser.add_argument('--test-predicates-with-classifiers-file', type=str, default=None,
                             help='File to use for predicates with classifiers during testing')
-    arg_parser.add_argument('--test-log-file', type=str, required=True,
+    arg_parser.add_argument('--test-log-file', type=str, default=None,
                             help='File to log during testing')
 
     args = arg_parser.parse_args()

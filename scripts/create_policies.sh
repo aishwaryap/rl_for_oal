@@ -5,6 +5,8 @@ AGENT_NAME=l_gamma_1_beam_10_init
 
 ./create_agent_dirs.sh $AGENT_NAME
 
+cd ../src
+
 python RLPolicy.py \
     --model-type=linear \
     --candidate-questions-beam-size=10 \
@@ -16,7 +18,11 @@ python RLPolicy.py \
 
 AGENT_NAME=m_gamma_1_beam_10_init
 
+cd ../scripts
+
 ./create_agent_dirs.sh $AGENT_NAME
+
+cd ../src
 
 python RLPolicy.py \
     --model-type=mlp \

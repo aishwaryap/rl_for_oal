@@ -15,7 +15,7 @@ from RLPolicy import RLPolicy
 __author__ = 'aishwarya'
 
 
-class DialogAgent:
+class DialogAgent(object):
     def __init__(self, agent_name, classifier_manager, policy, seen_predicates_file, predicates_with_classifiers_file,
                  per_turn_reward, success_reward, failure_reward, max_turns,
                  log_filename=None):
