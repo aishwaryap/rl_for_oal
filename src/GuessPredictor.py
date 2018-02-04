@@ -162,6 +162,16 @@ class GuessPredictor:
         target = np.array([self.get_target(dialog_state)])
         self.predictor.partial_fit(feature_vector, target)
 
+    def compute_update(self, dialog_state):
+        feature_vector = np.array([self.get_features(dialog_state)])
+        target = np.array([self.get_target(dialog_state)])
+        return {'guess_predictor_feature': feature_vector, 'guess_predictor_target': target}
+
+    def perform_updates(self, updates):
+        feature_vectors = np.array([update['guess_predictor_feature'] for update in updates])
+        target_values = np.array([update['guess_predictor_target'] for update in updates])
+        self.predictor.partial_fit(feature_vectors, target_values)
+
     def get_guess_success_prob(self, dialog_state):
         feature_vector = np.array([self.get_features(dialog_state)])
         success_prob = self.predictor.predict(feature_vector)

@@ -153,10 +153,21 @@ class ParallelRLPolicy(AbstractPolicy):
         else:
             self.stored_action = None
             target_q = reward
-        return (self.get_features(prev_dialog_state, next_action), target_q)
 
-    def perform_updates(self, feature_vectors, target_q_values):
+        update = {'feature': self.get_features(prev_dialog_state, next_action),
+                  'target': target_q}
+
+        if self.separate_guess_predictor:
+            update.update(self.guess_predictor.compute_update(prev_dialog_state))
+
+        return update
+
+    def perform_updates(self, updates):
+        feature_vectors = np.array([update['feature'] for update in updates])
+        target_q_values = np.array([update['target'] for update in updates])
         self.q.partial_fit(feature_vectors, target_q_values)
+        if self.separate_guess_predictor:
+            self.separate_guess_predictor.perform_updates(updates)
         self.untrained = False
 
     def get_next_action(self, dialog_state):
@@ -196,6 +207,6 @@ if __name__ == '__main__':
         with open(args.guess_predictor_file, 'rb') as handle:
             initial_guess_predictor = pickle.load(handle)
 
-    policy = RLPolicy(args.save_file, args.on_topic, None, args.model_type, args.separate_guess_predictor,
-                      args.gamma, args.candidate_questions_beam_size, initial_guess_predictor)
+    policy = ParallelRLPolicy(args.save_file, args.on_topic, None, args.model_type, args.separate_guess_predictor,
+                              args.gamma, args.candidate_questions_beam_size, initial_guess_predictor)
     policy.save()

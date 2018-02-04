@@ -10,6 +10,7 @@ import pickle
 from StaticPolicy import StaticPolicy
 from RLPolicy import RLPolicy
 
+
 class PolicyInitDialogAgent(DialogAgent):
     def __init__(self, agent_name, classifier_manager, source_policy, target_policy, seen_predicates_file,
                  predicates_with_classifiers_file, per_turn_reward, success_reward, failure_reward, max_turns,
@@ -20,6 +21,12 @@ class PolicyInitDialogAgent(DialogAgent):
 
         self.source_policy = source_policy
         self.target_policy = target_policy
+
+    def set_classifier_manager(self, classifier_manager):
+        self.classifier_manager = classifier_manager
+        self.policy.classifier_manager = classifier_manager
+        self.source_policy.classifier_manager = classifier_manager
+        self.target_policy.classifier_manager = classifier_manager
 
     def run_dialog(self, candidate_regions, target_region, description, region_contents, testing=False):
         start_time = datetime.now()

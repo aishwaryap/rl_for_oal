@@ -198,3 +198,6 @@ class AbstractPolicy(object):
 
     def compute_update(self, prev_dialog_state, next_action, next_dialog_state, reward):
         pass
+
+    def perform_updates(self, updates):
+        pass

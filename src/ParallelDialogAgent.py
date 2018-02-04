@@ -10,7 +10,7 @@ import pickle
 
 # Imports for unpickling
 from StaticPolicy import StaticPolicy
-from RLPolicy import RLPolicy
+from ParallelRLPolicy import ParallelRLPolicy
 
 __author__ = 'aishwarya'
 
@@ -64,6 +64,7 @@ class DialogAgent(object):
         # Labels acquired (within dialog)
         # This is a dict with label name as key, and (region_id, 0/1 label value) as value
         self.labels_acquired = None
+        self.policy_updates = None  # Policy updates from dialog
 
         # Some cross dialog stats that the agent accumulates over time
         self.num_dialogs_completed = 0
@@ -73,10 +74,6 @@ class DialogAgent(object):
         self.predicate_successes = dict()   # Number of successful dialogs per predicate in target descriptions
 
         self.log_filename = log_filename
-
-    def set_classifier_manager(self, classifier_manager):
-        self.classifier_manager = classifier_manager
-        self.policy.classifier_manager = classifier_manager
 
     def reset_for_test(self, seen_predicates_file, predicates_with_classifiers_file, log_filename):
         # All predicates the agent has ever seen
@@ -161,6 +158,7 @@ class DialogAgent(object):
         self.decisions = dict()
         self.get_decision_scores()
         self.labels_acquired = dict()
+        self.policy_updates = list()
 
         cur_time = datetime.now()
         # print 'Completing setup: ' + str(cur_time - prev_time)
@@ -177,6 +175,7 @@ class DialogAgent(object):
         self.candidate_regions_nbrs = None
         self.region_contents = None
         self.labels_acquired = None
+        self.policy_updates = None
 
     def update_decision_score(self, predicate):
         data_points = np.array([self.candidate_regions_features[region] for region in self.candidate_regions])
@@ -231,6 +230,15 @@ class DialogAgent(object):
     def perform_dialog_classifier_updates(self):
         for predicate in self.labels_acquired:
             self.classifier_manager.update_classifier(predicate, self.labels_acquired[predicate])
+            self.update_decision_score(predicate)
+
+            if predicate not in self.predicates_with_classifiers:
+                self.predicates_with_classifiers.add(predicate)
+                self.predicates_without_classifiers.remove(predicate)
+
+    def perform_classifier_updates(self, labels_acquired):
+        for predicate in labels_acquired:
+            self.classifier_manager.update_classifier(predicate, labels_acquired[predicate])
             self.update_decision_score(predicate)
 
             if predicate not in self.predicates_with_classifiers:
@@ -312,6 +320,7 @@ class DialogAgent(object):
         dialog_stats = dict()
         dialog_stats['agent_name'] = self.agent_name
         dialog_stats['num_regions'] = len(candidate_regions)
+        dialog_stats['updates'] = list()
 
         while not dialog_complete:
             turn_start_time = datetime.now()
@@ -357,7 +366,9 @@ class DialogAgent(object):
                 next_dialog_state = self.get_dialog_state()
 
             if not testing:
-                self.policy.update(prev_dialog_state, next_action, next_dialog_state, reward)
+                update = self.policy.compute_update(prev_dialog_state, next_action, next_dialog_state, reward)
+                if update is not None:
+                    dialog_stats['updates'].append(update)
 
             self.log('Turn ' + str(self.num_system_turns - 1)
                      + ' time = ' + format(datetime.now() - turn_start_time))

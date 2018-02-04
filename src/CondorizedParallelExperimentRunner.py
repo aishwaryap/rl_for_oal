@@ -22,7 +22,7 @@ from PolicyInitDialogAgent import PolicyInitDialogAgent
 __author__ = 'aishwarya'
 
 
-class ExperimentRunner:
+class CondorizedParallelExperimentRunner:
     # min_regions, max_regions, mean_regions, std_dev_regions - Domain of discourse (Paramters for truncated Gaussian)
     def __init__(self, dataset_dir, dialog_stats_filename, testing, batch_num, batch_size,
                  min_regions, max_regions, mean_regions, std_dev_regions):
@@ -261,7 +261,8 @@ if __name__ == '__main__':
     # Load dialog agent
     with open(args.agent_file, 'rb') as agent_file:
         dialog_agent = pickle.load(agent_file)
-    dialog_agent.set_classifier_manager(classifiers_manager)
+    dialog_agent.classifier_manager = classifiers_manager
+    dialog_agent.policy.classifier_manager = classifiers_manager
 
     if args.testing:
         dialog_agent.reset_for_test(args.test_seen_predicates_file, args.test_predicates_with_classifiers_file,
