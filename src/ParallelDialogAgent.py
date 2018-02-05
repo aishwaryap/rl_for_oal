@@ -368,14 +368,16 @@ class DialogAgent(object):
             if not testing:
                 update = self.policy.compute_update(prev_dialog_state, next_action, next_dialog_state, reward)
                 if update is not None:
-                    dialog_stats['updates'].append(update)
+                    dialog_stats['policy_updates'].append(update)
 
             self.log('Turn ' + str(self.num_system_turns - 1)
                      + ' time = ' + format(datetime.now() - turn_start_time))
             print 'Turn ' + str(self.num_system_turns - 1) \
                   + ' time = ' + format(datetime.now() - turn_start_time)
 
-        self.perform_dialog_classifier_updates()
+        # self.perform_dialog_classifier_updates()
+        dialog_stats['classifier_updates'] = copy.deepcopy(self.labels_acquired)
+
         self.update_cross_dialog_stats(dialog_stats)
         self.finish_task()
 

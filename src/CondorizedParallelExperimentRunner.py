@@ -14,6 +14,7 @@ from RegionDict import RegionDict
 from KeyedFileDict import KeyedFileDict
 from ClassifiersManager import ClassifiersManager
 from datetime import datetime
+from threading import Thread, Lock
 
 # Imports for unpickling
 from DialogAgent import DialogAgent
@@ -84,6 +85,7 @@ class CondorizedParallelExperimentRunner:
         dialog_stats_header = ['agent_name', 'num_regions', 'success', 'num_system_turns']
         self.dialog_stats_file = open(dialog_stats_filename, 'w')
         self.dialog_stats_writer = csv.DictWriter(self.dialog_stats_file, fieldnames=dialog_stats_header, delimiter=',')
+        self.dialog_stats_lock = Lock()
 
     def sample_domain_of_discourse(self):
         # Sample number of regions from a truncated Gaussian
@@ -96,7 +98,7 @@ class CondorizedParallelExperimentRunner:
         # Sample num_regions uniformly without replacement
         regions = np.random.choice(self.batch_regions, num_regions)
         return regions
-
+    
     def run_experiment(self, agent, testing=False):
         domain_of_discourse = self.sample_domain_of_discourse()
         target_region = np.random.choice(domain_of_discourse)
