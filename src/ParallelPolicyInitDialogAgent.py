@@ -1,24 +1,21 @@
 #!/usr/bin/python
-# A special dialog agent that runs dialogs using one policy and trains another
 
-from DialogAgent import DialogAgent
-from datetime import datetime
-from argparse import ArgumentParser
 import pickle
 import copy
+from argparse import ArgumentParser
+from ParallelDialogAgent import ParallelDialogAgent
 
 # Imports for unpickling
 from StaticPolicy import StaticPolicy
-from RLPolicy import RLPolicy
+from ParallelRLPolicy import ParallelRLPolicy
 
 
-class PolicyInitDialogAgent(DialogAgent):
+class ParallelPolicyInitDialogAgent(ParallelDialogAgent):
     def __init__(self, agent_name, classifier_manager, source_policy, target_policy, seen_predicates_file,
-                 predicates_with_classifiers_file, per_turn_reward, success_reward, failure_reward, max_turns,
-                 log_filename=None):
-        super(PolicyInitDialogAgent, self).__init__(agent_name, classifier_manager, source_policy, seen_predicates_file,
-                                                    predicates_with_classifiers_file, per_turn_reward, success_reward,
-                                                    failure_reward, max_turns, log_filename)
+                 predicates_with_classifiers_file, per_turn_reward, success_reward, failure_reward, max_turns):
+        super(ParallelPolicyInitDialogAgent, self).__init__(agent_name, classifier_manager, source_policy,
+                                                            seen_predicates_file, predicates_with_classifiers_file,
+                                                            per_turn_reward, success_reward, failure_reward, max_turns)
 
         self.source_policy = source_policy
         self.target_policy = target_policy
@@ -29,32 +26,22 @@ class PolicyInitDialogAgent(DialogAgent):
         self.source_policy.classifier_manager = classifier_manager
         self.target_policy.classifier_manager = classifier_manager
 
+    def perform_policy_updates(self, policy_updates):
+        self.target_policy.perform_updates(policy_updates)
+
     def run_dialog(self, candidate_regions, target_region, description, region_contents, testing=False):
-        start_time = datetime.now()
-
-        self.log('candidate_regions = ' + str(candidate_regions))
-        self.log('target_region = ' + str(target_region))
-        self.log('description = ' + str(description))
-        self.log('region_contents = ' + str(region_contents))
-
-        time_before_setup = datetime.now()
         self.setup_task(candidate_regions, description, region_contents, target_region)
-        self.log('Time for setup = ' + format(datetime.now() - time_before_setup))
-        print 'Time for setup = ' + format(datetime.now() - time_before_setup)
 
         dialog_complete = False
         dialog_stats = dict()
         dialog_stats['agent_name'] = self.agent_name
         dialog_stats['num_regions'] = len(candidate_regions)
         dialog_stats['predicates'] = copy.deepcopy(self.current_predicates)
+        dialog_stats['policy_updates'] = list()
 
         while not dialog_complete:
-            turn_start_time = datetime.now()
-
             prev_dialog_state = self.get_dialog_state()
             next_action = self.source_policy.get_next_action(prev_dialog_state)
-            self.log('Turn ' + str(self.num_system_turns) + ' action: ' + next_action['action'])
-
             reward = self.per_turn_reward
 
             self.num_system_turns += 1
@@ -66,8 +53,6 @@ class PolicyInitDialogAgent(DialogAgent):
                 else:
                     dialog_stats['success'] = 0
                     reward = self.failure_reward
-                self.log('\tGuess = ' + str(guess))
-                self.log('\tSuccess = ' + str(dialog_stats['success'] == 1))
                 dialog_complete = True
                 dialog_stats['num_system_turns'] = self.num_system_turns
 
@@ -91,19 +76,23 @@ class PolicyInitDialogAgent(DialogAgent):
             else:
                 next_dialog_state = self.get_dialog_state()
 
-            self.target_policy.update(prev_dialog_state, next_action, next_dialog_state, reward)
+            if not testing:
+                update = self.target_policy.compute_update(prev_dialog_state, next_action, next_dialog_state, reward)
+                if update is not None:
+                    dialog_stats['policy_updates'].append(update)
 
-            self.log('Turn ' + str(self.num_system_turns - 1)
-                     + ' time = ' + format(datetime.now() - turn_start_time))
-            print 'Turn ' + str(self.num_system_turns - 1) \
-                  + ' time = ' + format(datetime.now() - turn_start_time)
+            # print 'Turn ' + str(self.num_system_turns - 1) \
+            #       + ' time = ' + format(datetime.now() - turn_start_time)
+            # print 'type(dialog_agent.classifier_manager) =', type(self.classifier_manager)
+            # print 'type(dialog_agent.policy.classifier_manager) =', type(self.policy.classifier_manager)
+            #
+            # print 'dialog_stats.keys() = ', dialog_stats.keys()
 
-        self.perform_dialog_classifier_updates()
+        # self.perform_dialog_classifier_updates()
+        dialog_stats['classifier_updates'] = copy.deepcopy(self.labels_acquired)
+
         self.update_cross_dialog_stats(dialog_stats)
         self.finish_task()
-
-        self.log('Dialog time = ' + format(datetime.now() - start_time))
-        self.log('--------------------------------------------------------------\n')
 
         return dialog_stats
 
@@ -139,8 +128,6 @@ if __name__ == '__main__':
                             help='Text file to track seen predicates')
     arg_parser.add_argument('--predicates-with-classifiers-file', type=str, required=True,
                             help='Text file to track predicates with classifiers')
-    arg_parser.add_argument('--log-filename', type=str, required=True,
-                            help='Log file')
     arg_parser.add_argument('--save-file', type=str, required=True,
                             help='File to save pickled agent')
 
@@ -162,8 +149,9 @@ if __name__ == '__main__':
         target_policy = pickle.load(policy_file)
 
     # Needs to be instantiated without a classifier manager to be pickled
-    dialog_agent = PolicyInitDialogAgent(args.agent_name, None, source_policy, target_policy, args.seen_predicates_file,
-                                         args.predicates_with_classifiers_file, args.per_turn_reward,
-                                         args.success_reward, args.failure_reward, args.max_turns,
-                                         args.log_filename)
+    # Logfile is None because otherwise writing to logs becomes a bottleneck
+    dialog_agent = ParallelPolicyInitDialogAgent(args.agent_name, None, source_policy, target_policy,
+                                                 args.seen_predicates_file, args.predicates_with_classifiers_file,
+                                                 args.per_turn_reward, args.success_reward, args.failure_reward,
+                                                 args.max_turns)
     dialog_agent.save(args.save_file)

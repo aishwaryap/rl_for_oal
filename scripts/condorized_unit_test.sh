@@ -1,25 +1,17 @@
 AGENT_NAME=$1
 
-mkdir -p /scratch/cluster/aish/rl_for_oal/$AGENT_NAME/
-mkdir -p /scratch/cluster/aish/rl_for_oal/$AGENT_NAME/classifiers
-mkdir -p /scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels
-mkdir -p /scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/train
-mkdir -p /scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/val
+./create_agent_dirs.sh $AGENT_NAME
 
 cd ../src
 
-python StaticPolicy.py \
-    --save-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/policy.pkl
-
-python DialogAgent.py \
+python ParallelDialogAgent.py \
     --agent-name=$AGENT_NAME \
     --policy-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/policy.pkl \
     --seen-predicates-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/seen_predicates.txt \
     --predicates-with-classifiers-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/predicates_with_classifiers.txt \
-    --log-filename=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/log.txt \
     --save-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/dialog_agent.pkl
 
-python ExperimentRunner.py \
+python CondorizedParallelExperimentRunner.py \
     --dataset-dir=/scratch/cluster/aish/VisualGenome/ \
     --dialog-stats-filename=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/stats.txt \
     --classifiers-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/classifiers \
@@ -27,6 +19,8 @@ python ExperimentRunner.py \
     --train-labels-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/train \
     --val-labels-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/val \
     --agent-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/dialog_agent.pkl \
-    --num-dialogs=1000 \
+    --num-threads=2 \
+    --num-batches=2 \
+    --num-dialogs-per-batch-per-thread=2 \
     --batch-num=0
 

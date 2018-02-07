@@ -56,7 +56,9 @@ class StaticPolicy(AbstractPolicy):
         return len(self.get_label_question_candidates(dialog_state, beam_size=1)) > 0
 
     def get_next_action(self, dialog_state):
-        # print '\n\t\tIn get_next_action'
+        # print 'In StaticPolicy.get_next_action'
+        # print 'type(dialog_agent.policy.classifier_manager) =', type(self.classifier_manager)
+        # print
 
         # print "dialog_state['current_predicates'] =", dialog_state['current_predicates']
         # print "dialog_state['predicates_without_classifiers'] =", dialog_state['predicates_without_classifiers']

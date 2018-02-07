@@ -15,8 +15,10 @@ __author__ = 'aishwarya'
 class ParallelRLPolicy(AbstractPolicy):
     # This should have the same classifier manager as the dialog agent
     def __init__(self, save_file, on_topic, classifier_manager, model_type, separate_guess_predictor, gamma,
-                 candidate_questions_beam_size, initial_guess_predictor=None):
-        super(ParallelRLPolicy, self).__init__(save_file, on_topic, classifier_manager)
+                 candidate_questions_beam_size, min_prob_weight, max_prob_weight, max_prob_kappa,
+                 initial_guess_predictor=None):
+        super(ParallelRLPolicy, self).__init__(save_file, on_topic, classifier_manager, min_prob_weight,
+                                               max_prob_weight, max_prob_kappa)
 
         self.gamma = gamma
         self.candidate_questions_beam_size = candidate_questions_beam_size
@@ -197,6 +199,12 @@ if __name__ == '__main__':
                             help='Add this argument to limit number of questions considered to some integer')
     arg_parser.add_argument('--on-topic', action="store_true", default=False,
                             help='Ask only on topic questions')
+    arg_parser.add_argument('--min-prob-weight', type=float, default=1.0,
+                            help='Probability for kappa=0 and kappa=1')
+    arg_parser.add_argument('--max-prob-weight', type=float, default=100.0,
+                            help='Probability for peak point')
+    arg_parser.add_argument('--max-prob-kappa', type=float, default=0.8,
+                            help='Kappa at which distribution peaks')
     arg_parser.add_argument('--save-file', type=str, required=True,
                             help='File to save pickled policy')
 
@@ -208,5 +216,6 @@ if __name__ == '__main__':
             initial_guess_predictor = pickle.load(handle)
 
     policy = ParallelRLPolicy(args.save_file, args.on_topic, None, args.model_type, args.separate_guess_predictor,
-                              args.gamma, args.candidate_questions_beam_size, initial_guess_predictor)
+                              args.gamma, args.candidate_questions_beam_size, args.min_prob_weight,
+                              args.max_prob_weight, args.max_prob_kappa, initial_guess_predictor)
     policy.save()

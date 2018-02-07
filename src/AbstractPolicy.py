@@ -76,7 +76,17 @@ class AbstractPolicy(object):
 
     # Find valid label questions
     def get_label_question_candidates(self, dialog_state, beam_size=None):
-        # print '\n\t\t\tIn get_label_question_candidates'
+        # print 'In get_label_question_candidates'
+        # print 'type(dialog_agent.policy.classifier_manager) =', type(self.classifier_manager)
+        # print 'dialog_agent.policy.classifier_manager.__class__.__name__ =', self.classifier_manager.__class__.__name__
+        # print 'dialog_agent.policy.classifier_manager.train_labels.keys() =', \
+        #     self.classifier_manager.train_labels.keys()[:10]
+        # print 'dialog_agent.policy.classifier_manager.val_labels.keys() =', \
+        #     self.classifier_manager.val_labels.keys()[:10]
+        # print 'dialog_agent.policy.classifier_manager.kappas.keys() =', \
+        #     self.classifier_manager.kappas.keys()[:10]
+        # print
+
         if self.on_topic:
             unknown_cur_dialog_predicates = [predicate for predicate in dialog_state['current_predicates']
                                              if predicate in dialog_state['predicates_without_classifiers']]
@@ -192,9 +202,11 @@ class AbstractPolicy(object):
         pass
 
     def save(self):
+        classifier_manager = self.classifier_manager
         self.classifier_manager = None
         with open(self.save_file, 'wb') as handle:
             pickle.dump(self, handle)
+        self.classifier_manager = classifier_manager
 
     def compute_update(self, prev_dialog_state, next_action, next_dialog_state, reward):
         pass

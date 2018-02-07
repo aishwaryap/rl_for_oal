@@ -15,10 +15,9 @@ from ParallelRLPolicy import ParallelRLPolicy
 __author__ = 'aishwarya'
 
 
-class DialogAgent(object):
+class ParallelDialogAgent(object):
     def __init__(self, agent_name, classifier_manager, policy, seen_predicates_file, predicates_with_classifiers_file,
-                 per_turn_reward, success_reward, failure_reward, max_turns,
-                 log_filename=None):
+                 per_turn_reward, success_reward, failure_reward, max_turns):
         self.agent_name = agent_name
         self.classifier_manager = classifier_manager
         self.policy = policy
@@ -73,9 +72,11 @@ class DialogAgent(object):
         self.predicate_uses = dict()        # Number of times a predicate has occurred in target descriptions
         self.predicate_successes = dict()   # Number of successful dialogs per predicate in target descriptions
 
-        self.log_filename = log_filename
+    def set_classifier_manager(self, classifier_manager):
+        self.classifier_manager = classifier_manager
+        self.policy.classifier_manager = classifier_manager
 
-    def reset_for_test(self, seen_predicates_file, predicates_with_classifiers_file, log_filename):
+    def reset_for_test(self, seen_predicates_file, predicates_with_classifiers_file):
         # All predicates the agent has ever seen
         self.seen_predicates_file = seen_predicates_file
         if os.path.isfile(self.seen_predicates_file):
@@ -101,13 +102,6 @@ class DialogAgent(object):
         self.total_num_system_turns = 0  # Number of system turns across all dialogs
         self.predicate_uses = dict()  # Number of times a predicate has occurred in target descriptions
         self.predicate_successes = dict()  # Number of successful dialogs per predicate in target descriptions
-
-        self.log_filename = log_filename
-
-    def log(self, log_str):
-        if self.log_filename is not None:
-            with open(self.log_filename, 'a') as handle:
-                handle.write(log_str + '\n')
 
     # Load things that are required at start of an interaction
     # candidate_regions - List of region IDs (int) of candidate regions
@@ -212,7 +206,6 @@ class DialogAgent(object):
             else:
                 chosen_region = np.random.choice(new_positive_regions)
                 labels_acquired = [(chosen_region, 1)]
-        self.log('\tLabels acquired = ' + str(labels_acquired))
 
         if predicate not in self.labels_acquired:
             self.labels_acquired[predicate] = labels_acquired
@@ -236,14 +229,22 @@ class DialogAgent(object):
                 self.predicates_with_classifiers.add(predicate)
                 self.predicates_without_classifiers.remove(predicate)
 
-    def perform_classifier_updates(self, labels_acquired):
-        for predicate in labels_acquired:
-            self.classifier_manager.update_classifier(predicate, labels_acquired[predicate])
-            self.update_decision_score(predicate)
+    def perform_classifier_updates(self, classifier_updates):
+        all_labels = dict()
+        for dialog_labels in classifier_updates:
+            for predicate in dialog_labels:
+                if predicate not in all_labels:
+                    all_labels[predicate] = dialog_labels[predicate]
+                else:
+                    all_labels[predicate] += dialog_labels[predicate]
+        for predicate in all_labels:
+            self.classifier_manager.update_classifier(predicate, all_labels[predicate])
 
             if predicate not in self.predicates_with_classifiers:
                 self.predicates_with_classifiers.add(predicate)
-                self.predicates_without_classifiers.remove(predicate)
+
+    def perform_policy_updates(self, policy_updates):
+        self.policy.perform_updates(policy_updates)
 
     # Simulate the process of asking for a predicate for a region
     def ask_label(self, predicate, region):
@@ -251,7 +252,6 @@ class DialogAgent(object):
             labels_acquired = [(region, 1)]
         else:
             labels_acquired = [(region, 0)]
-        self.log('\tLabels acquired = ' + str(labels_acquired))
 
         if predicate not in self.labels_acquired:
             self.labels_acquired[predicate] = labels_acquired
@@ -304,31 +304,18 @@ class DialogAgent(object):
                     self.predicate_successes[predicate] += 1
 
     def run_dialog(self, candidate_regions, target_region, description, region_contents, testing=False):
-        start_time = datetime.now()
-
-        self.log('candidate_regions = ' + str(candidate_regions))
-        self.log('target_region = ' + str(target_region))
-        self.log('description = ' + str(description))
-        self.log('region_contents = ' + str(region_contents))
-
-        time_before_setup = datetime.now()
         self.setup_task(candidate_regions, description, region_contents, target_region)
-        self.log('Time for setup = ' + format(datetime.now() - time_before_setup))
-        print 'Time for setup = ' + format(datetime.now() - time_before_setup)
 
         dialog_complete = False
         dialog_stats = dict()
         dialog_stats['agent_name'] = self.agent_name
         dialog_stats['num_regions'] = len(candidate_regions)
-        dialog_stats['updates'] = list()
+        dialog_stats['predicates'] = copy.deepcopy(self.current_predicates)
+        dialog_stats['policy_updates'] = list()
 
         while not dialog_complete:
-            turn_start_time = datetime.now()
-
             prev_dialog_state = self.get_dialog_state()
             next_action = self.policy.get_next_action(prev_dialog_state)
-            self.log('Turn ' + str(self.num_system_turns) + ' action: ' + next_action['action'])
-
             reward = self.per_turn_reward
 
             self.num_system_turns += 1
@@ -340,8 +327,6 @@ class DialogAgent(object):
                 else:
                     dialog_stats['success'] = 0
                     reward = self.failure_reward
-                self.log('\tGuess = ' + str(guess))
-                self.log('\tSuccess = ' + str(dialog_stats['success'] == 1))
                 dialog_complete = True
                 dialog_stats['num_system_turns'] = self.num_system_turns
 
@@ -370,19 +355,18 @@ class DialogAgent(object):
                 if update is not None:
                     dialog_stats['policy_updates'].append(update)
 
-            self.log('Turn ' + str(self.num_system_turns - 1)
-                     + ' time = ' + format(datetime.now() - turn_start_time))
-            print 'Turn ' + str(self.num_system_turns - 1) \
-                  + ' time = ' + format(datetime.now() - turn_start_time)
+            # print 'Turn ' + str(self.num_system_turns - 1) \
+            #       + ' time = ' + format(datetime.now() - turn_start_time)
+            # print 'type(dialog_agent.classifier_manager) =', type(self.classifier_manager)
+            # print 'type(dialog_agent.policy.classifier_manager) =', type(self.policy.classifier_manager)
+            #
+            # print 'dialog_stats.keys() = ', dialog_stats.keys()
 
         # self.perform_dialog_classifier_updates()
         dialog_stats['classifier_updates'] = copy.deepcopy(self.labels_acquired)
 
         self.update_cross_dialog_stats(dialog_stats)
         self.finish_task()
-
-        self.log('Dialog time = ' + format(datetime.now() - start_time))
-        self.log('--------------------------------------------------------------\n')
 
         return dialog_stats
 
@@ -392,14 +376,16 @@ class DialogAgent(object):
 
         with open(self.predicates_with_classifiers_file, 'w') as handle:
             handle.write('\n'.join(self.predicates_with_classifiers))
-        
+
+        classifier_manager = self.classifier_manager
         if self.classifier_manager is not None:
             self.classifier_manager.save()
-        self.classifier_manager = None
         self.policy.save()
+        self.classifier_manager = None
         self.policy.classifier_manager = None
         with open(save_filename, 'wb') as save_file:
             pickle.dump(self, save_file)
+        self.classifier_manager = classifier_manager
 
 
 if __name__ == '__main__':
@@ -414,8 +400,6 @@ if __name__ == '__main__':
                             help='Text file to track seen predicates')
     arg_parser.add_argument('--predicates-with-classifiers-file', type=str, required=True,
                             help='Text file to track predicates with classifiers')
-    arg_parser.add_argument('--log-filename', type=str, required=True,
-                            help='Log file')
     arg_parser.add_argument('--save-file', type=str, required=True,
                             help='File to save pickled agent')
 
@@ -434,8 +418,8 @@ if __name__ == '__main__':
         loaded_policy = pickle.load(policy_file)
 
     # Needs to be instantiated without a classifier manager to be pickled
-    dialog_agent = DialogAgent(args.agent_name, None, loaded_policy, args.seen_predicates_file,
-                               args.predicates_with_classifiers_file, args.per_turn_reward,
-                               args.success_reward, args.failure_reward, args.max_turns,
-                               args.log_filename)
+    # Logfile is None because otherwise writing to logs becomes a bottleneck
+    dialog_agent = ParallelDialogAgent(args.agent_name, None, loaded_policy, args.seen_predicates_file,
+                                       args.predicates_with_classifiers_file, args.per_turn_reward,
+                                       args.success_reward, args.failure_reward, args.max_turns)
     dialog_agent.save(args.save_file)

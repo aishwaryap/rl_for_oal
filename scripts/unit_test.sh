@@ -1,17 +1,8 @@
 AGENT_NAME=$1
 
-mkdir -p /scratch/cluster/aish/rl_for_oal/$AGENT_NAME/
-mkdir -p /scratch/cluster/aish/rl_for_oal/$AGENT_NAME/classifiers
-mkdir -p /scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels
-mkdir -p /scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/train
-mkdir -p /scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/val
+./create_agent_dirs.sh $AGENT_NAME
 
 cd ../src
-
-python RLPolicy.py \
-    --model-type=linear \
-    --candidate-questions-beam-size=10 \
-    --save-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/policy.pkl
 
 python DialogAgent.py \
     --agent-name=$AGENT_NAME \
@@ -29,6 +20,6 @@ python ExperimentRunner.py \
     --train-labels-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/train \
     --val-labels-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/val \
     --agent-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/dialog_agent.pkl \
-    --num-dialogs=1000 \
+    --num-dialogs=10 \
     --batch-num=0
 

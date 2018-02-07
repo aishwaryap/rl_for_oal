@@ -4,8 +4,5 @@ AGENT_NAME=$1
 
 cd ../src
 
-python ParallelRLPolicy.py \
-    --model-type=linear \
-    --candidate-questions-beam-size=10 \
-    --gamma=1.0 \
+python StaticPolicy.py \
     --save-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/policy.pkl
