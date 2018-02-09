@@ -39,8 +39,6 @@ def create_condor_script(filename, script_to_run, args_str):
     condor_script_file.write('Log = ' + os.path.join(condor_log_dir, filename + '.log') + '\n')
     condor_script_file.write('Error = ' + os.path.join(condor_err_dir, filename + '.err') + '\n')
     condor_script_file.write('Output = ' + os.path.join(condor_out_dir, filename + '.out') + '\n')
-    condor_script_file.write('Notification = complete\n')
-    condor_script_file.write('Notify_user = aish@cs.utexas.edu\n')
     condor_script_file.write('Queue 1\n')
     condor_script_file.close()
 
@@ -93,19 +91,20 @@ def main():
 
         # Condor script to init
         create_condor_script(agent_name + '_init', 'condorized_init_policy.sh', agent_name + ' s_peaked')
-        condor_submit_init_file.write('condor_submit ' + condor_scripts_dir + agent_name + '_init.sh')
+        condor_submit_init_file.write('condor_submit ' + condor_scripts_dir + agent_name + '_init.sh\n')
 
         # Condor script to train
         create_condor_script(agent_name + '_train', 'condorized_train_policy.sh', agent_name)
-        condor_submit_train_file.write('condor_submit ' + condor_scripts_dir + agent_name + '_train.sh')
+        condor_submit_train_file.write('condor_submit ' + condor_scripts_dir + agent_name + '_train.sh\n')
 
         # Condor script to test
         create_condor_script(agent_name + '_test', 'condorized_test_policy.sh', agent_name)
-        condor_submit_test_file.write('condor_submit ' + condor_scripts_dir + agent_name + '_test.sh')
+        condor_submit_test_file.write('condor_submit ' + condor_scripts_dir + agent_name + '_test.sh\n')
 
     condor_submit_init_file.close()
     condor_submit_train_file.close()
     condor_submit_test_file.close()
+
 
 if __name__ == '__main__':
     main()
