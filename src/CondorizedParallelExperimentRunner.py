@@ -94,8 +94,10 @@ class CondorizedParallelExperimentRunner:
         seen_predicates_flat = [item for sublist in seen_predicates for item in sublist]
 
         agent.seen_predicates = agent.seen_predicates.union(seen_predicates_flat)
-        agent.perform_classifier_updates(classifier_updates)
-        agent.perform_policy_updates(policy_updates_flat)
+        if len(classifier_updates) > 0:
+            agent.perform_classifier_updates(classifier_updates)
+        if len(policy_updates_flat) > 0:
+            agent.perform_policy_updates(policy_updates_flat)
         agent.save(agent_file)
         dialog_stats_file = open(self.dialog_stats_filename, 'a+')
         dialog_stats_writer = csv.writer(dialog_stats_file, delimiter=',')

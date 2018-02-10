@@ -31,6 +31,8 @@ class GuessPredictor:
             'Avg decision of second best classifier'
         ]
 
+        self.fitted = False
+
     def compute_guess_scores(self, dialog_state):
         positive_scores = np.zeros(len(dialog_state['candidate_regions']))
         negative_scores = np.zeros(len(dialog_state['candidate_regions']))
@@ -171,8 +173,11 @@ class GuessPredictor:
         feature_vectors = np.array([update['guess_predictor_feature'] for update in updates])
         target_values = np.array([update['guess_predictor_target'] for update in updates])
         self.predictor.partial_fit(feature_vectors, target_values)
+        self.fitted = True
 
     def get_guess_success_prob(self, dialog_state):
         feature_vector = np.array([self.get_features(dialog_state)])
+        if not self.fitted:
+            return 0.0
         success_prob = self.predictor.predict(feature_vector)
         return success_prob
