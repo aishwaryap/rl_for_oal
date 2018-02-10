@@ -61,7 +61,8 @@ class ClassifiersManager:
 
     # Return classifier margins for data points (returns 0 - majority class if no classifier is present)
     def get_margins(self, predicate, data_points):
-        classifier = self.classifiers[predicate]
+        if predicate in self.classifiers:
+            classifier = self.classifiers[predicate]
         if classifier is not None:
             return classifier.predict(data_points)
         else:
