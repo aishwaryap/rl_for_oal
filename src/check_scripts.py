@@ -35,7 +35,7 @@ def main(args):
 
     resubmit_file = open(args.resubmit_file, 'w')
     completed_file = open(args.completed_file, 'w')
-    incomplete_file = open(args.incompleted_file, 'w')
+    incomplete_file = open(args.incomplete_file, 'w')
 
     for script in required_scripts:
         print '\nscript =', script
