@@ -5,6 +5,23 @@ from argparse import ArgumentParser
 
 
 def main(args):
+    policies = dict()
+    orig_policy_creation_file = open(args.orig_policy_creation_file)
+    new_policy_creation_file = open(args.new_policy_creation_file)
+    if args.recreate_policies:
+        cur_policy_code = list()
+        cur_policy_name = None
+        for line in orig_policy_creation_file:
+            if line.startswith('# ---'):
+                if cur_policy_name is not None:
+                    cur_policy_code.append(line)
+                    policies[cur_policy_name] = cur_policy_code
+            elif line.startswith('AGENT_NAME='):
+                cur_policy_code = [line]
+                cur_policy_name = line.strip().split('=')[1]
+            else:
+                cur_policy_code.append(line)
+
     condor_scripts_dir = os.path.join(args.condor_dir, 'scripts')
     condor_err_dir = os.path.join(args.condor_dir, 'err')
     condor_out_dir = os.path.join(args.condor_dir, 'out')
@@ -26,6 +43,10 @@ def main(args):
             if error_regex.match(err):
                 print 'Error found'
                 resubmit_file.write('condor_submit ' + os.path.join(condor_scripts_dir, script) + '\n')
+                if args.recreate_policies:
+                    code = policies[re.sub('.sh', '', script)]
+                    code.insert(2, './remove_agent_dirs AGENT_NAME\n')
+                    new_policy_creation_file.write(''.join(code))
                 continue
         out_file = os.path.join(condor_out_dir, re.sub('.sh', '.out', script))
         print 'Output file =', out_file
@@ -36,6 +57,8 @@ def main(args):
 
     resubmit_file.close()
     completed_file.close()
+    orig_policy_creation_file.close()
+    new_policy_creation_file.close()
 
 
 if __name__ == '__main__':
@@ -48,6 +71,12 @@ if __name__ == '__main__':
                             help='File to write condor submit commands to resubmit')
     arg_parser.add_argument('--completed-file', type=str, required=True,
                             help='File to write list fo completed files')
+    arg_parser.add_argument('--orig-policy-creation-file', type=str, default='../scripts/create_policies.sh',
+                            help='Original script which created policies')
+    arg_parser.add_argument('--new-policy-creation-file', type=str, default='../scripts/recreate_policies.sh',
+                            help='Original script which created policies')
+    arg_parser.add_argument('--recreate-policies', action="store_true", default=False,
+                            help='Add this flag if policies need to be instantiated again')
 
     args = arg_parser.parse_args()
 
