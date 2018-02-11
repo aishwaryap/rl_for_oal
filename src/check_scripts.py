@@ -48,7 +48,6 @@ def main(args):
                 resubmit_file.write('condor_submit ' + os.path.join(condor_scripts_dir, script) + '\n')
                 if args.recreate_policies:
                     code = policies[re.sub('_init.sh', '', script)]
-                    code.insert(2, './remove_agent_dirs.sh $AGENT_NAME\n')
                     new_policy_creation_file.write(''.join(code))
                 continue
         out_file = os.path.join(condor_out_dir, re.sub('.sh', '.out', script))

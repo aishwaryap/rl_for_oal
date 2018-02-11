@@ -3,6 +3,7 @@ cd ../src
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beam1_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -16,6 +17,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beam1_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -28,6 +30,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beam1_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -40,6 +43,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beam1
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -51,6 +55,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beam3_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -64,6 +69,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beam3_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -76,6 +82,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beam3_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -88,6 +95,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beam3
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -99,6 +107,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beam10_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -112,6 +121,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beam10_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -124,6 +134,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beam10_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -136,6 +147,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beam10
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -147,6 +159,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beamfull_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -159,6 +172,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beamfull_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -170,6 +184,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beamfull_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -181,6 +196,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_0_beamfull
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -191,6 +207,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beam1_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -204,6 +221,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beam1_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -216,6 +234,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beam1_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -228,6 +247,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beam1
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -239,6 +259,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beam3_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -252,6 +273,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beam3_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -264,6 +286,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beam3_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -276,6 +299,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beam3
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -287,6 +311,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beam10_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -300,6 +325,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beam10_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -312,6 +338,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beam10_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -324,6 +351,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beam10
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -335,6 +363,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beamfull_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -347,6 +376,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beamfull_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -358,6 +388,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beamfull_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -369,6 +400,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_1_beamfull
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -379,6 +411,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beam1_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -392,6 +425,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beam1_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -404,6 +438,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beam1_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -416,6 +451,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beam1
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -427,6 +463,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beam3_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -440,6 +477,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beam3_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -452,6 +490,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beam3_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -464,6 +503,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beam3
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -475,6 +515,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beam10_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -488,6 +529,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beam10_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -500,6 +542,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beam10_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -512,6 +555,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beam10
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -523,6 +567,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beamfull_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -535,6 +580,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beamfull_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -546,6 +592,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beamfull_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -557,6 +604,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma0_9_beamfull
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -567,6 +615,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beam1_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -580,6 +629,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beam1_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -592,6 +642,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beam1_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -604,6 +655,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beam1
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -615,6 +667,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beam3_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -628,6 +681,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beam3_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -640,6 +694,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beam3_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -652,6 +707,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beam3
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -663,6 +719,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beam10_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -676,6 +733,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beam10_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -688,6 +746,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beam10_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -700,6 +759,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beam10
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -711,6 +771,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beamfull_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -723,6 +784,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beamfull_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -734,6 +796,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beamfull_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -745,6 +808,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=linear_gamma1_0_beamfull
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -755,6 +819,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beam1_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -768,6 +833,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beam1_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -780,6 +846,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beam1_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -792,6 +859,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beam1
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -803,6 +871,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beam3_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -816,6 +885,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beam3_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -828,6 +898,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beam3_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -840,6 +911,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beam3
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -851,6 +923,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beam10_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -864,6 +937,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beam10_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -876,6 +950,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beam10_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -888,6 +963,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beam10
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -899,6 +975,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beamfull_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -911,6 +988,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beamfull_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -922,6 +1000,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beamfull_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -933,6 +1012,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_0_beamfull
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -943,6 +1023,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beam1_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -956,6 +1037,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beam1_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -968,6 +1050,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beam1_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -980,6 +1063,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beam1
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -991,6 +1075,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beam3_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1004,6 +1089,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beam3_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1016,6 +1102,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beam3_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1028,6 +1115,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beam3
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1039,6 +1127,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beam10_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1052,6 +1141,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beam10_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1064,6 +1154,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beam10_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1076,6 +1167,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beam10
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1087,6 +1179,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beamfull_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1099,6 +1192,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beamfull_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1110,6 +1204,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beamfull_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1121,6 +1216,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_1_beamfull
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1131,6 +1227,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beam1_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1144,6 +1241,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beam1_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1156,6 +1254,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beam1_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1168,6 +1267,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beam1
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1179,6 +1279,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beam3_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1192,6 +1293,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beam3_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1204,6 +1306,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beam3_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1216,6 +1319,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beam3
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1227,6 +1331,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beam10_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1240,6 +1345,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beam10_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1252,6 +1358,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beam10_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1264,6 +1371,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beam10
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1275,6 +1383,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beamfull_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1287,6 +1396,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beamfull_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1298,6 +1408,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beamfull_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1309,6 +1420,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma0_9_beamfull
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1319,6 +1431,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beam1_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1332,6 +1445,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beam1_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1344,6 +1458,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beam1_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1356,6 +1471,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beam1
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1367,6 +1483,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beam3_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1380,6 +1497,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beam3_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1392,6 +1510,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beam3_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1404,6 +1523,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beam3
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1415,6 +1535,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beam10_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1428,6 +1549,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beam10_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1440,6 +1562,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beam10_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1452,6 +1575,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beam10
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1463,6 +1587,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beamfull_sepguess_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1475,6 +1600,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beamfull_sepguess
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1486,6 +1612,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beamfull_ontopic
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
@@ -1497,6 +1624,7 @@ python ParallelRLPolicy.py \
 # -----------------------------------------------------------------------------
 AGENT_NAME=mlp_gamma1_0_beamfull
 cd ../scripts
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 cd ../src
 python ParallelRLPolicy.py \
