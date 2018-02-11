@@ -33,6 +33,7 @@ def main(args):
 
     resubmit_file = open(args.resubmit_file, 'w')
     completed_file = open(args.completed_file, 'w')
+    incomplete_file = open(args.incompleted_file, 'w')
 
     for script in required_scripts:
         print '\nscript =', script
@@ -54,9 +55,12 @@ def main(args):
             out = handle.read().strip().lower()
             if len(out) > 0:
                 completed_file.write(script + '\n')
+            else:
+                incomplete_file.write(script + '\n')
 
     resubmit_file.close()
     completed_file.close()
+    incomplete_file.close()
     orig_policy_creation_file.close()
     new_policy_creation_file.close()
 
@@ -71,6 +75,8 @@ if __name__ == '__main__':
                             help='File to write condor submit commands to resubmit')
     arg_parser.add_argument('--completed-file', type=str, required=True,
                             help='File to write list fo completed files')
+    arg_parser.add_argument('--incomplete-file', type=str, required=True,
+                            help='File to write list of files still running')
     arg_parser.add_argument('--orig-policy-creation-file', type=str, default='../scripts/create_policies.sh',
                             help='Original script which created policies')
     arg_parser.add_argument('--new-policy-creation-file', type=str, default='../scripts/recreate_policies.sh',
