@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 def main(args):
     policies = dict()
     orig_policy_creation_file = open(args.orig_policy_creation_file)
-    new_policy_creation_file = open(args.new_policy_creation_file)
+    new_policy_creation_file = open(args.new_policy_creation_file, 'w')
     if args.recreate_policies:
         cur_policy_code = list()
         cur_policy_name = None
@@ -21,6 +21,8 @@ def main(args):
                 cur_policy_name = line.strip().split('=')[1]
             else:
                 cur_policy_code.append(line)
+
+        print policies
 
     condor_scripts_dir = os.path.join(args.condor_dir, 'scripts')
     condor_err_dir = os.path.join(args.condor_dir, 'err')
@@ -45,8 +47,8 @@ def main(args):
                 print 'Error found'
                 resubmit_file.write('condor_submit ' + os.path.join(condor_scripts_dir, script) + '\n')
                 if args.recreate_policies:
-                    code = policies[re.sub('.sh', '', script)]
-                    code.insert(2, './remove_agent_dirs AGENT_NAME\n')
+                    code = policies[re.sub('_init.sh', '', script)]
+                    code.insert(2, './remove_agent_dirs.sh $AGENT_NAME\n')
                     new_policy_creation_file.write(''.join(code))
                 continue
         out_file = os.path.join(condor_out_dir, re.sub('.sh', '.out', script))
