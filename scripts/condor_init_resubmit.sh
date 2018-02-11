@@ -28,12 +28,10 @@ condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/linear_gamma1_0_be
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/linear_gamma1_0_beam3_sepguess_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/linear_gamma1_0_beam10_sepguess_ontopic_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/linear_gamma1_0_beam10_sepguess_init.sh
-condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/linear_gamma1_0_beam10_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/linear_gamma1_0_beamfull_sepguess_ontopic_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/linear_gamma1_0_beamfull_sepguess_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_0_beam1_sepguess_ontopic_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_0_beam1_sepguess_init.sh
-condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_0_beam1_ontopic_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_0_beam3_sepguess_ontopic_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_0_beam3_sepguess_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_0_beam10_sepguess_ontopic_init.sh
@@ -50,7 +48,6 @@ condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_1_beamf
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_1_beamfull_sepguess_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_9_beam1_sepguess_ontopic_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_9_beam1_sepguess_init.sh
-condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_9_beam1_ontopic_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_9_beam3_sepguess_ontopic_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_9_beam3_sepguess_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_9_beam10_sepguess_ontopic_init.sh
@@ -59,7 +56,6 @@ condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_9_beamf
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma0_9_beamfull_sepguess_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma1_0_beam1_sepguess_ontopic_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma1_0_beam1_sepguess_init.sh
-condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma1_0_beam3_sepguess_ontopic_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma1_0_beam3_sepguess_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma1_0_beam10_sepguess_ontopic_init.sh
 condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/mlp_gamma1_0_beam10_sepguess_init.sh
