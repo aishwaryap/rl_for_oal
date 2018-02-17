@@ -76,6 +76,7 @@ def main():
         create_policies_file.write('# -----------------------------------------------------------------------------\n')
         create_policies_file.write('AGENT_NAME=' + agent_name + '\n')
         create_policies_file.write('cd ../scripts\n')
+        create_policies_file.write('./remove_agent_dirs.sh $AGENT_NAME\n')
         create_policies_file.write('./create_agent_dirs.sh $AGENT_NAME\n')
         create_policies_file.write('cd ../src\n')
         create_policies_file.write('python ParallelRLPolicy.py \\\n')
@@ -90,7 +91,7 @@ def main():
         create_policies_file.write('    --save-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/policy.pkl\n\n')
 
         # Condor script to init
-        create_condor_script(agent_name + '_init', 'condorized_init_policy.sh', agent_name + ' s_peaked')
+        create_condor_script(agent_name + '_init', 'condorized_init_policy.sh', agent_name + ' static')
         condor_submit_init_file.write('condor_submit ' + condor_scripts_dir + agent_name + '_init.sh\n')
 
         # Condor script to train

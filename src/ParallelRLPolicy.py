@@ -141,7 +141,9 @@ class ParallelRLPolicy(AbstractPolicy):
     def get_q(self, dialog_state, action):
         if self.untrained:
             return 0.0
-        feature_vector = [self.get_features(dialog_state, action)]
+        feature_vector = np.array([self.get_features(dialog_state, action)])
+        if len(feature_vector.shape) == 1:
+            feature_vector = feature_vector.reshape(1, -1)
         return self.q.predict(feature_vector)
 
     def compute_update(self, prev_dialog_state, next_action, next_dialog_state, reward):
@@ -165,19 +167,25 @@ class ParallelRLPolicy(AbstractPolicy):
         return update
 
     def perform_updates(self, updates):
-        feature_vectors = np.array([update['feature'] for update in updates])
-        target_q_values = np.array([update['target'] for update in updates])
-        self.q.partial_fit(feature_vectors, target_q_values)
-        if self.separate_guess_predictor:
-            self.separate_guess_predictor.perform_updates(updates)
-        self.untrained = False
+        if len(updates) > 0:
+            feature_vectors = np.array([update['feature'] for update in updates])
+            target_q_values = np.array([update['target'] for update in updates])
+            if len(feature_vectors.shape) == 1:
+                feature_vectors = feature_vectors.reshape(1, -1)
+            self.q.partial_fit(feature_vectors, target_q_values)
+            if self.separate_guess_predictor:
+                self.guess_predictor.perform_updates(updates)
+            self.untrained = False
 
     def get_next_action(self, dialog_state):
+        print 'In ParallelRLPolicy.get_next_action'
         if self.stored_action is not None:
             return self.stored_action
         else:
             candidate_actions = self.get_candidate_actions(dialog_state)
+            print 'Got candidate actions'
             q_values = [self.get_q(dialog_state, action) for action in candidate_actions]
+            print 'Got q values'
             max_q = max(q_values)
             max_q_idx = q_values.index(max_q)
             return candidate_actions[max_q_idx]

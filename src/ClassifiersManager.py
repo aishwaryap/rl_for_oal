@@ -24,8 +24,8 @@ class ClassifiersManager:
 
         # Create LRU caches for accessing classifiers, labels and kappas
         classifiers_dict = KeyedFileDict(classifiers_dir, loading_mode='pickle')
-        self.classifiers = pylru.WriteThroughCacheManager(classifiers_dict, classifiers_cache_size)
-        # self.classifiers = classifiers_dict
+        # self.classifiers = pylru.WriteThroughCacheManager(classifiers_dict, classifiers_cache_size)
+        self.classifiers = classifiers_dict
 
         self.kappas_file = kappas_file
         self.kappas = dict()
@@ -34,9 +34,13 @@ class ClassifiersManager:
                 ast.literal_eval(handle.read().strip())
 
         train_labels_dict = KeyedFileDict(train_labels_dir, loading_mode='pickle')
-        self.train_labels = pylru.WriteThroughCacheManager(train_labels_dict, labels_cache_size)
+        # self.train_labels = pylru.WriteThroughCacheManager(train_labels_dict, labels_cache_size)
+        self.train_labels = train_labels_dict
+
         val_labels_dict = KeyedFileDict(val_labels_dir, loading_mode='pickle')
-        self.val_labels = pylru.WriteThroughCacheManager(val_labels_dict, labels_cache_size)
+        # self.val_labels = pylru.WriteThroughCacheManager(val_labels_dict, labels_cache_size)
+        self.val_labels = val_labels_dict
+
         self.min_labels_before_val_set = min_labels_before_val_set
         self.val_label_fraction = val_label_fraction
         self.max_labels_in_val_set = max_labels_in_val_set
@@ -61,12 +65,11 @@ class ClassifiersManager:
 
     # Return classifier margins for data points (returns 0 - majority class if no classifier is present)
     def get_margins(self, predicate, data_points):
-        if predicate in self.classifiers:
+        if predicate in self.classifiers.keys():
             classifier = self.classifiers[predicate]
-        if classifier is not None:
-            return classifier.predict(data_points)
-        else:
-            return np.zeros(len(data_points))
+            if classifier is not None:
+                return classifier.predict(data_points)
+        return np.zeros(len(data_points))
 
     # Update a classifier with new known labels
     # new_labels is a list of (region_id, 0/1) pairs
@@ -109,8 +112,8 @@ class ClassifiersManager:
                     features = feature
                 else:
                     features = np.vstack((features, feature))
-            if len(features.shape) == 0:
-                features = np.expand_dims(features, 0)
+            if len(features.shape) == 1:
+                features = features.reshape(1, -1)
             classifier.partial_fit(features, labels, classes=[0, 1])
             self.classifiers[predicate] = classifier
 
@@ -125,6 +128,8 @@ class ClassifiersManager:
         if classifier is not None and predicate in self.val_labels.keys():
             regions = [region for (region, label) in self.val_labels[predicate]]
             labels = [label for (region, label) in self.val_labels[predicate]]
+            if len(regions) != len(labels):
+                raise RuntimeError('len(regions) = ' + str(len(regions)) + ', len(labels) = ' + str(len(labels)))
             if len(set(labels)) == 2:
                 features = None
                 for region in regions:
@@ -133,8 +138,8 @@ class ClassifiersManager:
                         features = feature
                     else:
                         features = np.vstack((features, feature))
-                if len(features.shape) == 0:
-                    features = np.expand_dims(features, 0)
+                if len(features.shape) == 1:
+                    features = features.reshape(1, -1)
                 preds = classifier.predict(features)
 
                 # Compute Kappa and normalize to 0-1
@@ -158,7 +163,7 @@ class ClassifiersManager:
                     else:
                         features = np.vstack((features, feature))
                 if len(features.shape) == 1:
-                    features = np.expand_dims(features, 0)
+                    features = features.reshape(1, -1)
 
                 preds = list()
                 for idx in range(len(labels)):

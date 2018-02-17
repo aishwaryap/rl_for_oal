@@ -1,0 +1,39 @@
+Traceback (most recent call last):
+File "CondorizedParallelExperimentRunner.py", line 352, in <module>
+num_batches_needed)
+File "CondorizedParallelExperimentRunner.py", line 143, in run_experiments
+agents = self.load_agents(agent_file, num_threads)
+File "CondorizedParallelExperimentRunner.py", line 188, in load_agents
+agent.reset_for_test(args.test_seen_predicates_file, args.test_predicates_with_classifiers_file)
+File "/v/filer5b/v20q001/aish/Documents/Research/Code/rl_for_oal/src/ParallelDialogAgent.py", line 82, in reset_for_test
+if os.path.isfile(self.seen_predicates_file):
+File "/usr/lib/python2.7/genericpath.py", line 37, in isfile
+st = os.stat(path)
+TypeError: coercing to Unicode: need string or buffer, NoneType found
+
+Traceback (most recent call last):
+File "CondorizedParallelExperimentRunner.py", line 352, in <module>
+num_batches_needed)
+File "CondorizedParallelExperimentRunner.py", line 143, in run_experiments
+agents = self.load_agents(agent_file, num_threads)
+File "CondorizedParallelExperimentRunner.py", line 188, in load_agents
+agent.reset_for_test(args.test_seen_predicates_file, args.test_predicates_with_classifiers_file)
+File "/v/filer5b/v20q001/aish/Documents/Research/Code/rl_for_oal/src/ParallelDialogAgent.py", line 82, in reset_for_test
+if os.path.isfile(self.seen_predicates_file):
+File "/usr/lib/python2.7/genericpath.py", line 37, in isfile
+st = os.stat(path)
+TypeError: coercing to Unicode: need string or buffer, NoneType found
+
+Traceback (most recent call last):
+File "CondorizedParallelExperimentRunner.py", line 352, in <module>
+num_batches_needed)
+File "CondorizedParallelExperimentRunner.py", line 143, in run_experiments
+agents = self.load_agents(agent_file, num_threads)
+File "CondorizedParallelExperimentRunner.py", line 188, in load_agents
+agent.reset_for_test(args.test_seen_predicates_file, args.test_predicates_with_classifiers_file)
+File "/v/filer5b/v20q001/aish/Documents/Research/Code/rl_for_oal/src/ParallelDialogAgent.py", line 82, in reset_for_test
+if os.path.isfile(self.seen_predicates_file):
+File "/usr/lib/python2.7/genericpath.py", line 37, in isfile
+st = os.stat(path)
+TypeError: coercing to Unicode: need string or buffer, NoneType found
+

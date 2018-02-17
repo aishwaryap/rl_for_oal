@@ -30,7 +30,9 @@ class ParallelPolicyInitDialogAgent(ParallelDialogAgent):
         self.target_policy.perform_updates(policy_updates)
 
     def run_dialog(self, candidate_regions, target_region, description, region_contents, testing=False):
+        # print 'In run_dialog'
         self.setup_task(candidate_regions, description, region_contents, target_region)
+        # print 'Setup task complete'
 
         dialog_complete = False
         dialog_stats = dict()
@@ -40,8 +42,11 @@ class ParallelPolicyInitDialogAgent(ParallelDialogAgent):
         dialog_stats['policy_updates'] = list()
 
         while not dialog_complete:
+            # print 'Starting turn', self.num_system_turns + 1
             prev_dialog_state = self.get_dialog_state()
+            # print 'Got dialog state'
             next_action = self.source_policy.get_next_action(prev_dialog_state)
+            # print 'Got next action ', next_action['action']
             reward = self.per_turn_reward
 
             self.num_system_turns += 1
@@ -65,6 +70,8 @@ class ParallelPolicyInitDialogAgent(ParallelDialogAgent):
             else:
                 raise RuntimeError('Invalid action :' + str(next_action['action']))
 
+            # print 'Executed action'
+
             if self.num_system_turns >= self.max_turns:
                 dialog_complete = True
                 dialog_stats['success'] = 0
@@ -77,11 +84,13 @@ class ParallelPolicyInitDialogAgent(ParallelDialogAgent):
                 next_dialog_state = self.get_dialog_state()
 
             if not testing:
+                # print 'Computing update'
                 update = self.target_policy.compute_update(prev_dialog_state, next_action, next_dialog_state, reward)
+                # print 'Computed update'
                 if update is not None:
                     dialog_stats['policy_updates'].append(update)
 
-            # print 'Turn ' + str(self.num_system_turns - 1) \
+            # print 'Turn ' + str(self.num_system_turns - 1) + 'complete'
             #       + ' time = ' + format(datetime.now() - turn_start_time)
             # print 'type(dialog_agent.classifier_manager) =', type(self.classifier_manager)
             # print 'type(dialog_agent.policy.classifier_manager) =', type(self.policy.classifier_manager)

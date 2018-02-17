@@ -1,5 +1,6 @@
 AGENT_NAME=$1
 
+./remove_agent_dirs.sh $AGENT_NAME
 ./create_agent_dirs.sh $AGENT_NAME
 
 cd ../src

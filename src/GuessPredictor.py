@@ -153,7 +153,7 @@ class GuessPredictor:
         scores = self.compute_guess_scores(dialog_state)
         max_score = max(scores)
         max_score_indices = [idx for (idx, score) in enumerate(scores) if score == max_score]
-        target_idx = dialog_state['candidate_regions'].index(dialog_state['target_region'])
+        target_idx = dialog_state['candidate_regions'].tolist().index(dialog_state['target_region'])
         if target_idx in max_score_indices:
             return 1.0 / len(max_score_indices)
         else:
@@ -161,22 +161,28 @@ class GuessPredictor:
 
     def update(self, dialog_state):
         feature_vector = np.array([self.get_features(dialog_state)])
+        if len(feature_vector.shape) == 1:
+            feature_vector = feature_vector.reshape(1, -1)
         target = np.array([self.get_target(dialog_state)])
         self.predictor.partial_fit(feature_vector, target)
 
     def compute_update(self, dialog_state):
-        feature_vector = np.array([self.get_features(dialog_state)])
-        target = np.array([self.get_target(dialog_state)])
+        feature_vector = self.get_features(dialog_state)
+        target = self.get_target(dialog_state)
         return {'guess_predictor_feature': feature_vector, 'guess_predictor_target': target}
 
     def perform_updates(self, updates):
         feature_vectors = np.array([update['guess_predictor_feature'] for update in updates])
+        if len(feature_vectors.shape) == 1:
+            feature_vectors = feature_vectors.reshape(1, -1)
         target_values = np.array([update['guess_predictor_target'] for update in updates])
         self.predictor.partial_fit(feature_vectors, target_values)
         self.fitted = True
 
     def get_guess_success_prob(self, dialog_state):
         feature_vector = np.array([self.get_features(dialog_state)])
+        if len(feature_vector.shape) == 1:
+            feature_vector = feature_vector.reshape(1, -1)
         if not self.fitted:
             return 0.0
         success_prob = self.predictor.predict(feature_vector)

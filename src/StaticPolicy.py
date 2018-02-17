@@ -90,26 +90,31 @@ class StaticPolicy(AbstractPolicy):
             if ask_example_valid and yes_no_valid:
                 r = random.random()
                 if r <= self.yes_no_prob:
+                    # print 'Getting label question'
                     prev_time = datetime.now()
                     next_action = self.get_label_question_candidates(dialog_state, beam_size=1)[0]
                     cur_time = datetime.now()
                     # print 'Getting label question =', str(cur_time - prev_time)
                 else:
+                    # print 'Getting example question'
                     prev_time = datetime.now()
                     next_action = self.get_example_question_candidates(dialog_state, beam_size=1)[0]
                     cur_time = datetime.now()
                     # print 'Getting example question =', str(cur_time - prev_time)
             elif ask_example_valid:
+                # print 'Getting example question'
                 prev_time = datetime.now()
                 next_action = self.get_example_question_candidates(dialog_state, beam_size=1)[0]
                 cur_time = datetime.now()
                 # print 'Getting example question =', str(cur_time - prev_time)
             elif yes_no_valid:
+                # print 'Getting label question'
                 prev_time = datetime.now()
                 next_action = self.get_label_question_candidates(dialog_state, beam_size=1)[0]
-                cur_time = datetime.now()
+                # cur_time = datetime.now()
                 # print 'Getting label question =', str(cur_time - prev_time)
             else:
+                # print 'Getting guess'
                 prev_time = datetime.now()
                 next_action = self.get_guess(dialog_state)
                 cur_time = datetime.now()

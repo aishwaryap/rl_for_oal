@@ -6,6 +6,7 @@ import re
 import pickle
 import numpy as np
 import shutil
+import time
 
 __author__ = 'aishwarya'
 
@@ -35,11 +36,25 @@ class KeyedFileDict:
             filename = os.path.join(self.dict_dir, str(key) + '.pkl')
             # print 'filename =', filename, '; press enter:'
             # x = raw_input()
-            if not os.path.isfile(filename):
-                return None
-            with open(filename, 'rb') as handle:
-                item = pickle.load(handle)
-                return item
+
+            possible_backoff_times = [0, 0.01]
+            max_trials = 1000
+            num_trials = 0
+
+            while num_trials < max_trials:
+                num_trials += 1
+                try:
+                    if not os.path.isfile(filename):
+                        return None
+                    with open(filename, 'rb') as handle:
+                        item = pickle.load(handle)
+                        return item
+                except (TypeError, EOFError, KeyError, AttributeError, ValueError):
+                    timeout = np.random.choice(possible_backoff_times)
+                    possible_backoff_times.append(2 * possible_backoff_times[-1])
+                    time.sleep(timeout)
+            raise RuntimeError('Exceeded limit of trails in opening file' + str(filename))
+
         elif self.loading_mode == 'numpy':
             filename = os.path.join(self.dict_dir, str(key))
             if self.delimiter is not None:

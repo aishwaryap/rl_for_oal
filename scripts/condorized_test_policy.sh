@@ -7,14 +7,16 @@ cd ../src
 
 python CondorizedParallelExperimentRunner.py \
     --dataset-dir=/scratch/cluster/aish/VisualGenome/ \
-    --dialog-stats-filename=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/stats.txt \
-    --classifiers-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/classifiers \
-    --kappas-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/kappas.csv \
-    --train-labels-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/train \
-    --val-labels-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/val \
+    --dialog-stats-filename=/scratch/cluster/aish/rl_for_oal/$TEST_DIR/test_stats.txt \
+    --classifiers-dir=/scratch/cluster/aish/rl_for_oal/$TEST_DIR/classifiers \
+    --kappas-file=/scratch/cluster/aish/rl_for_oal/$TEST_DIR/kappas.csv \
+    --train-labels-dir=/scratch/cluster/aish/rl_for_oal/$TEST_DIR/labels/train \
+    --val-labels-dir=/scratch/cluster/aish/rl_for_oal/$TEST_DIR/labels/val \
     --agent-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/dialog_agent.pkl \
+    --test-seen-predicates-file=/scratch/cluster/aish/rl_for_oal/$TEST_DIR/seen_predicates.txt \
+    --test-predicates-with-classifiers-file=/scratch/cluster/aish/rl_for_oal/$TEST_DIR/predicates_with_classifiers.txt \
     --num-threads=10 \
-    --num-batches=100 \
+    --num-batches=10 \
     --num-dialogs-per-batch-per-thread=10 \
     --batch-num=0 \
     --testing

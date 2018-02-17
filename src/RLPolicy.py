@@ -142,6 +142,8 @@ class RLPolicy(AbstractPolicy):
         if self.untrained:
             return 0.0
         feature_vector = [self.get_features(dialog_state, action)]
+        if len(feature_vector.shape) == 1:
+            feature_vector = feature_vector.reshape(1, -1)
         return self.q.predict(feature_vector)
 
     def update(self, prev_dialog_state, next_action, next_dialog_state, reward):
@@ -155,7 +157,10 @@ class RLPolicy(AbstractPolicy):
         else:
             self.stored_action = None
             target_q = reward
-        self.q.partial_fit([self.get_features(prev_dialog_state, next_action)], [target_q])
+        features = np.array(self.get_features(prev_dialog_state, next_action))
+        if len(features.shape) == 1:
+            features = features.reshape(1, -1)
+        self.q.partial_fit(features, np.array([target_q]))
         if self.separate_guess_predictor:
             self.guess_predictor.update(prev_dialog_state)
         self.untrained = False

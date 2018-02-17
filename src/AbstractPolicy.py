@@ -34,14 +34,15 @@ class AbstractPolicy(object):
         for predicate in dialog_state['current_predicates']:
             positive_scores += (dialog_state['decisions'][predicate] > 0) * dialog_state['current_kappas'][predicate]
             negative_scores += (dialog_state['decisions'][predicate] <= 0) * dialog_state['current_kappas'][predicate]
-        if np.count_nonzero((positive_scores + negative_scores)) == 0:
-            max_score = 0
-            max_score_idx = np.random.choice(range(len(dialog_state['candidate_regions'])))
-        else:
-            scores = positive_scores / (positive_scores + negative_scores)
-            scores = scores.tolist()
-            max_score = max(scores)
-            max_score_idx = scores.index(max_score)
+        # if np.count_nonzero((positive_scores + negative_scores)) == 0:
+        #     max_score = 0
+        #     max_score_idx = np.random.choice(range(len(dialog_state['candidate_regions'])))
+        # else:
+            # scores = positive_scores / (positive_scores + negative_scores)
+        scores = positive_scores - negative_scores
+        scores = scores.tolist()
+        max_score = max(scores)
+        max_score_idx = scores.index(max_score)
         action = {
                     'action': 'make_guess',
                     'guess': dialog_state['candidate_regions'][max_score_idx],
@@ -68,10 +69,14 @@ class AbstractPolicy(object):
         return output
 
     def get_min_margin_region(self, predicate, candidate_regions, dialog_state):
+        # print 'In AbstractPolicy.get_min_margin_region'
         data_points = np.array([dialog_state['candidate_regions_features'][region] for region in candidate_regions])
+        # print 'data_points.shape = ', data_points.shape
         margins = self.classifier_manager.get_margins(predicate, data_points).tolist()
+        # print 'margins = ', margins
         min_margin = min(margins)
         min_margin_region = candidate_regions[margins.index(min_margin)]
+        # print 'min_margin_region = ', min_margin_region
         return min_margin_region
 
     # Find valid label questions
@@ -130,8 +135,11 @@ class AbstractPolicy(object):
                         if len(possible_regions) > 0:
                             min_margin_region = self.get_min_margin_region(predicate, possible_regions, dialog_state)
                             questions += [(predicate, min_margin_region)]
+                    # print '\t\t\tExited for loop'
                     selected_predicate_indices = [predicates.index(p) for p in selected_predicates]
+                    # print '\t\t\tGot selected_predicate_indices'
                     remaining_indices = [idx for idx in range(len(predicates)) if idx not in selected_predicate_indices]
+                    # print '\t\t\tGot remaining_indices'
                     predicates = [predicates[idx] for idx in remaining_indices]
                     # print '\t\t\tRemaining predicates =', predicates
                     prob_numerators = [prob_numerators[idx] for idx in remaining_indices]
