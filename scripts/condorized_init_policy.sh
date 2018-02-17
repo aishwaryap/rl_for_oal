@@ -23,6 +23,7 @@ python CondorizedParallelExperimentRunner.py \
     --train-labels-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/$TRAINING_POLICY_AGENT/labels/train \
     --val-labels-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/$TRAINING_POLICY_AGENT/labels/val \
     --agent-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/dialog_agent.pkl \
+    --updates-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/updates.txt \
     --num-threads=10 \
     --num-batches=10 \
     --num-dialogs-per-batch-per-thread=10 \

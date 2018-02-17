@@ -29,7 +29,8 @@ class CondorizedParallelExperimentRunner:
     # min_regions, max_regions, mean_regions, std_dev_regions - Domain of discourse (Paramters for truncated Gaussian)
     def __init__(self, dataset_dir, dialog_stats_filename, batch_regions, testing,
                  min_regions, max_regions, mean_regions, std_dev_regions, classifier_manager,
-                 test_seen_predicates_file=None, test_predicates_with_classifiers_file=None):
+                 test_seen_predicates_file=None, test_predicates_with_classifiers_file=None,
+                 updates_file=None):
         self.dataset_dir = dataset_dir
         self.testing = testing
         self.test_seen_predicates_file = test_seen_predicates_file
@@ -44,6 +45,8 @@ class CondorizedParallelExperimentRunner:
 
         self.batch_regions = batch_regions
         self.region_set = set(self.batch_regions)
+
+        self.updates_file = updates_file
 
         prev_time = datetime.now()
 
@@ -89,6 +92,11 @@ class CondorizedParallelExperimentRunner:
         policy_updates = [dialog_stats['policy_updates'] for dialog_stats in dialog_stats_list
                           if 'policy_updates' in dialog_stats]
         policy_updates_flat = [item for sublist in policy_updates for item in sublist]
+
+        if self.updates_file is not None:
+            with open(self.updates_file, 'a+') as handle:
+                for update in policy_updates_flat:
+                    handle.write(str(update) + '\n')
 
         seen_predicates = [dialog_stats['predicates'] for dialog_stats in dialog_stats_list]
         seen_predicates_flat = [item for sublist in seen_predicates for item in sublist]
@@ -256,6 +264,9 @@ if __name__ == '__main__':
     arg_parser.add_argument('--test-predicates-with-classifiers-file', type=str, default=None,
                             help='File to use for predicates with classifiers during testing')
 
+    arg_parser.add_argument('--updates-file', type=str, default=None,
+                            help='Optionally add this to write updates to file')
+
     args = arg_parser.parse_args()
 
     cur_time = datetime.now()
@@ -337,7 +348,8 @@ if __name__ == '__main__':
                                                            args.testing, args.min_regions,
                                                            args.max_regions, args.mean_regions, args.std_dev_regions,
                                                            classifiers_manager, args.test_seen_predicates_file,
-                                                           args.test_predicates_with_classifiers_file)
+                                                           args.test_predicates_with_classifiers_file,
+                                                           args.updates_file)
 
     num_batches_needed = args.num_batches - experiment_runner.get_num_batches_complete(
         args.num_threads, args.num_dialogs_per_batch_per_thread)
