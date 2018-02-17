@@ -5,9 +5,9 @@ import re
 
 
 def main(args):
-    next_script_type = {'init': 'train', 'train': 'test'}
+    next_script_type = {'init': 'train', 'train': 'test', 'init_fixedlen': 'train_fixedlen', 'train_fixedlen': 'test_fixedlen'}
     completed_filename = '../logs/completed_' + args.script_type + '.txt'
-    ready_filename = '../scripts/ready_' + next_script_type[args.script_type] + '.txt'
+    ready_filename = '../scripts/ready_' + next_script_type[args.script_type] + '.sh'
     completed_file = open(completed_filename)
     ready_file = open(ready_filename, 'w')
     prefix = 'condor_submit /scratch/cluster/aish/rl_for_oal/condor/scripts/'

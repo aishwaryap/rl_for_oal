@@ -17,7 +17,7 @@ __author__ = 'aishwarya'
 
 class ParallelDialogAgent(object):
     def __init__(self, agent_name, classifier_manager, policy, seen_predicates_file, predicates_with_classifiers_file,
-                 per_turn_reward, success_reward, failure_reward, max_turns):
+                 per_turn_reward, success_reward, failure_reward, max_turns, force_guess_turns=None):
         self.agent_name = agent_name
         self.classifier_manager = classifier_manager
         self.policy = policy
@@ -26,6 +26,7 @@ class ParallelDialogAgent(object):
         self.success_reward = success_reward
         self.failure_reward = failure_reward
         self.max_turns = max_turns
+        self.force_guess_turns = force_guess_turns
 
         # All predicates the agent has ever seen
         self.seen_predicates_file = seen_predicates_file
@@ -318,6 +319,9 @@ class ParallelDialogAgent(object):
             next_action = self.policy.get_next_action(prev_dialog_state)
             reward = self.per_turn_reward
 
+            if self.force_guess_turns is not None and self.num_system_turns >= self.force_guess_turns:
+                next_action = self.policy.get_guess(prev_dialog_state)
+
             self.num_system_turns += 1
             if next_action['action'] == 'make_guess':
                 guess = next_action['guess']
@@ -411,6 +415,8 @@ if __name__ == '__main__':
                             help='Reward for failed dialog')
     arg_parser.add_argument('--max-turns', type=int, default=100,
                             help='Terminate the dialog after this many turns')
+    arg_parser.add_argument('--force-guess-turns', type=int, default=None,
+                            help='Number of turns after which to force a guess')
 
     args = arg_parser.parse_args()
 
@@ -421,5 +427,5 @@ if __name__ == '__main__':
     # Logfile is None because otherwise writing to logs becomes a bottleneck
     dialog_agent = ParallelDialogAgent(args.agent_name, None, loaded_policy, args.seen_predicates_file,
                                        args.predicates_with_classifiers_file, args.per_turn_reward,
-                                       args.success_reward, args.failure_reward, args.max_turns)
+                                       args.success_reward, args.failure_reward, args.max_turns, args.force_guess_turns)
     dialog_agent.save(args.save_file)
