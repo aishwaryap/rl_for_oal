@@ -99,6 +99,10 @@ def main(args):
         
         if args.script_type == 'test':
             stats_file = os.path.join(*[args.agent_path, re.sub('_' + args.script_type + '.sh', '', script) + '_test', args.script_type + '_stats.txt'])
+        elif args.script_type == 'fixedlen_test':
+            stats_file = os.path.join(*[args.agent_path, re.sub('.sh', '', script), 'test_stats.txt'])
+        elif args.script_type == 'fixedlen_train':
+            stats_file = os.path.join(*[args.agent_path, re.sub('_train.sh', '', script), 'train_stats.txt'])
         else:
             stats_file = os.path.join(*[args.agent_path, re.sub('_' + args.script_type + '.sh', '', script), args.script_type + '_stats.txt'])
 

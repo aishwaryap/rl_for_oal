@@ -56,7 +56,7 @@ def main():
     on_topic = [False]
     reward = [300, 500, 1000]
 
-    settings = list(itertools.product(model_types, gamma, beam_size, guess_predictor, on_topic))
+    settings = list(itertools.product(model_types, gamma, beam_size, guess_predictor, on_topic, reward))
 
     create_policies_file = open(create_policies_filename, 'w')
     condor_submit_init_file = open(condor_submit_init_filename, 'w')
@@ -70,8 +70,8 @@ def main():
 
     create_policies_file.write('cd ../src\n\n')
 
-    for (model_type, gamma, beam_size, guess_predictor, on_topic) in settings:
-        agent_name = get_agent_name(model_type, gamma, beam_size, guess_predictor, on_topic)
+    for (model_type, gamma, beam_size, guess_predictor, on_topic, reward) in settings:
+        agent_name = get_agent_name(model_type, gamma, beam_size, guess_predictor, on_topic, reward)
 
         # Call scripts to create policy
         create_policies_file.write('# -----------------------------------------------------------------------------\n')

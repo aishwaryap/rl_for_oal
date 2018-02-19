@@ -16,8 +16,8 @@ def main(args):
 
     for agent_name in agent_names:
         print 'agent name =', agent_name
-        # dialog_stats_file = os.path.join(*[args.agents_path, agent_name + '_test', 'test_stats.txt'])
-        dialog_stats_file = os.path.join(*[args.agents_path, agent_name, 'train_stats.txt'])        
+        dialog_stats_file = os.path.join(*[args.agents_path, agent_name + '_test', 'test_stats.txt'])
+        #dialog_stats_file = os.path.join(*[args.agents_path, agent_name, 'train_stats.txt'])        
         avg_success = list()
         avg_len = list()
 
