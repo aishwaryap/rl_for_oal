@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 import os
 import csv
 import re
+from scipy.stats import ttest_ind
 
 
 def main(args):
@@ -13,6 +14,9 @@ def main(args):
 
     all_avg_success = dict()
     all_avg_len = dict()
+    final_batches = dict()
+    improved = list()
+    trending_improved = list()
 
     for agent_name in agent_names:
         print 'agent name =', agent_name
@@ -32,17 +36,49 @@ def main(args):
         print 'len(stats) =', len(all_stats)
         print 'num_batches =', num_batches
 
+        first_batch = None
+        last_batch = None
+
         for batch_num in range(num_batches):
             start = batch_num * args.averaging_beam
             end = (batch_num + 1) * args.averaging_beam
             print 'batch_num =', batch_num, ', start =', start, ', end =', end
             batch_stats = all_stats[start:end]
+            if batch_num == 0:
+                first_batch = [float(stats[2]) for stats in batch_stats]
+            elif batch_num == num_batches - 1:
+                last_batch = [float(stats[2]) for stats in batch_stats]
+                final_batches[agent_name] = last_batch
+
             print 'agent_name =', agent_name, ', batch_stats:',len(batch_stats)
             avg_success.append(sum([float(stats[2]) for stats in batch_stats]) / float(args.averaging_beam))
             avg_len.append(sum([float(stats[3]) for stats in batch_stats]) / float(args.averaging_beam))
 
+        t, p = ttest_ind(first_batch, last_batch)
+        if p < 0.05:
+            improved.append(agent_name)
+        elif p < 0.1:
+            trending_improved.append(agent_name)
+
         all_avg_success[agent_name] = avg_success
         all_avg_len[agent_name] = avg_len
+
+    better_than_static = list()
+    trending_better_than_static = list()
+    for agent_name in final_batches:
+        static_results = final_batches['static']
+        this_results = final_batches[agent_name]
+        t, p = ttest_ind(static_results, this_results)
+        if p < 0.05:
+            better_than_static.append(agent_name)
+        elif p < 0.1:
+            trending_better_than_static.append(agent_name)
+
+    with open(args.improved_file, 'w') as handle:
+        handle.write('Improved \n' + '\n'.join(improved) + '\n\n')
+        handle.write('Trending Improved \n' + '\n'.join(trending_improved) + '\n\n')
+        handle.write('Better than static \n' + '\n'.join(better_than_static) + '\n\n')
+        handle.write('Trending better than static \n' + '\n'.join(trending_better_than_static) + '\n\n')
 
     with open(args.success_file, 'w') as handle:
         writer = csv.writer(handle, delimiter=',')
@@ -68,6 +104,8 @@ if __name__ == '__main__':
                             help='File to write avg success stats')
     arg_parser.add_argument('--len-file', type=str, default='../logs/len.txt',
                             help='File to write avg len stats')
+    arg_parser.add_argument('--improved-file', type=str, default='../logs/improved.txt',
+                            help='File to write which agents improved')
     arg_parser.add_argument('--averaging-beam', type=int, default=100,
                             help='Number of dialogs to successively average over')
 
