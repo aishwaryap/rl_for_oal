@@ -16,12 +16,13 @@ class ParallelRLPolicy(AbstractPolicy):
     # This should have the same classifier manager as the dialog agent
     def __init__(self, save_file, on_topic, classifier_manager, model_type, separate_guess_predictor, gamma,
                  candidate_questions_beam_size, min_prob_weight, max_prob_weight, max_prob_kappa,
-                 initial_guess_predictor=None):
+                 initial_guess_predictor=None, ablate_feature=None):
         super(ParallelRLPolicy, self).__init__(save_file, on_topic, classifier_manager, min_prob_weight,
                                                max_prob_weight, max_prob_kappa)
 
         self.gamma = gamma
         self.candidate_questions_beam_size = candidate_questions_beam_size
+        self.ablate_feature = ablate_feature
 
         if model_type == 'mlp':
             self.q = MLPRegressor()
@@ -131,6 +132,9 @@ class ParallelRLPolicy(AbstractPolicy):
         else:
             feature_vector.append(1.0)
 
+        if self.ablate_feature is not None:
+            feature_vector.remove(self.ablate_feature)
+
         return feature_vector
 
     def get_candidate_actions(self, dialog_state):
@@ -213,6 +217,8 @@ if __name__ == '__main__':
                             help='Probability for peak point')
     arg_parser.add_argument('--max-prob-kappa', type=float, default=0.8,
                             help='Kappa at which distribution peaks')
+    arg_parser.add_argument('--ablate-feature', type=int, default=None,
+                            help='Ablate this feature idx')
     arg_parser.add_argument('--save-file', type=str, required=True,
                             help='File to save pickled policy')
 
@@ -225,5 +231,6 @@ if __name__ == '__main__':
 
     policy = ParallelRLPolicy(args.save_file, args.on_topic, None, args.model_type, args.separate_guess_predictor,
                               args.gamma, args.candidate_questions_beam_size, args.min_prob_weight,
-                              args.max_prob_weight, args.max_prob_kappa, initial_guess_predictor)
+                              args.max_prob_weight, args.max_prob_kappa, initial_guess_predictor,
+                              args.ablate_feature)
     policy.save()

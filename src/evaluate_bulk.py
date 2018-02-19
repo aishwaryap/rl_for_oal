@@ -76,11 +76,26 @@ def main(args):
             elif p < 0.1:
                 trending_better_than_static.append(agent_name)
 
+    if 'static_ontopic' in final_batches:
+        better_than_static_ontopic = list()
+        trending_better_than_static_ontopic = list()
+        for agent_name in final_batches:
+            if all_avg_success[agent_name][-1] > all_avg_success['static_ontopic'][-1]:
+                static_results = final_batches['static']
+                this_results = final_batches[agent_name]
+                t, p = ttest_ind(static_results, this_results)
+                if p < 0.05:
+                    better_than_static_ontopic.append(agent_name)
+                elif p < 0.1:
+                    trending_better_than_static_ontopic.append(agent_name)
+
     with open(args.improved_file, 'w') as handle:
         handle.write('Improved \n' + '\n'.join(improved) + '\n\n')
         handle.write('Trending Improved \n' + '\n'.join(trending_improved) + '\n\n')
         handle.write('Better than static \n' + '\n'.join(better_than_static) + '\n\n')
         handle.write('Trending better than static \n' + '\n'.join(trending_better_than_static) + '\n\n')
+        handle.write('Better than static on-topic \n' + '\n'.join(better_than_static_ontopic) + '\n\n')
+        handle.write('Trending better than static on-topic \n' + '\n'.join(trending_better_than_static_ontopic) + '\n\n')
 
     with open(args.success_file, 'w') as handle:
         writer = csv.writer(handle, delimiter=',')
