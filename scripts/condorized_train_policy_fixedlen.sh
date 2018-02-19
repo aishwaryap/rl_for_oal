@@ -21,7 +21,7 @@ python CondorizedParallelExperimentRunner.py \
     --val-labels-dir=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/labels/val \
     --agent-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/dialog_agent.pkl \
     --num-threads=10 \
-    --num-batches=10 \
+    --num-batches=100 \
     --num-dialogs-per-batch-per-thread=10 \
     --batch-num=0
 

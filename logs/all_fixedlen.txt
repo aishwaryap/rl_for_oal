@@ -47,3 +47,4 @@ mlp_gamma1_0_beam100_ontopic_fixedlen_test.sh
 mlp_gamma1_0_beamfull_sepguess_ontopic_fixedlen_test.sh
 mlp_gamma1_0_beamfull_ontopic_fixedlen_test.sh
 static_test.sh
+static_ontopic_test.sh

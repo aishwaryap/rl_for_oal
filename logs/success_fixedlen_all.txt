@@ -43,7 +43,8 @@ mlp_gamma1_0_beam100_fixedlen,0.18,0.22,0.24,0.2,0.28,0.26,0.28
 linear_gamma0_9_beam100_fixedlen,0.22,0.24,0.18,0.3,0.24
 mlp_gamma0_9_beamfull_sepguess_fixedlen,0.22,0.28,0.27,0.21
 mlp_gamma0_9_beam10_fixedlen,0.2,0.19,0.25,0.2,0.26,0.2,0.28,0.33,0.16,0.25
-mlp_gamma1_0_beam100_sepguess_fixedlen,0.23,0.2,0.2,0.19,0.16,0.33
+static_ontopic,0.27,0.19,0.26,0.28,0.36,0.39,0.22,0.36,0.32,0.37
+mlp_gamma1_0_beam100_sepguess_fixedlen,0.23,0.2,0.2,0.19,0.16,0.33,0.3
 linear_gamma0_9_beam100_sepguess_fixedlen,0.27,0.21,0.23,0.25,0.16,0.21,0.18,0.26,0.27
 mlp_gamma1_0_beamfull_sepguess_ontopic_fixedlen,0.23,0.3,0.24,0.34,0.29,0.28,0.3,0.33,0.39,0.38
 linear_gamma1_0_beam100_fixedlen,0.17,0.19,0.25,0.29,0.29,0.19
