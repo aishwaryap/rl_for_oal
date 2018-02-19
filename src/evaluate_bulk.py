@@ -54,11 +54,12 @@ def main(args):
             avg_success.append(sum([float(stats[2]) for stats in batch_stats]) / float(args.averaging_beam))
             avg_len.append(sum([float(stats[3]) for stats in batch_stats]) / float(args.averaging_beam))
 
-        t, p = ttest_ind(first_batch, last_batch)
-        if p < 0.05:
-            improved.append(agent_name)
-        elif p < 0.1:
-            trending_improved.append(agent_name)
+        if avg_success[-1] > avg_success[0]:
+            t, p = ttest_ind(first_batch, last_batch)
+            if p < 0.05:
+                improved.append(agent_name)
+            elif p < 0.1:
+                trending_improved.append(agent_name)
 
         all_avg_success[agent_name] = avg_success
         all_avg_len[agent_name] = avg_len
@@ -66,13 +67,14 @@ def main(args):
     better_than_static = list()
     trending_better_than_static = list()
     for agent_name in final_batches:
-        static_results = final_batches['static']
-        this_results = final_batches[agent_name]
-        t, p = ttest_ind(static_results, this_results)
-        if p < 0.05:
-            better_than_static.append(agent_name)
-        elif p < 0.1:
-            trending_better_than_static.append(agent_name)
+        if all_avg_success[agent_name][-1] > all_avg_success['static'][-1]:
+            static_results = final_batches['static']
+            this_results = final_batches[agent_name]
+            t, p = ttest_ind(static_results, this_results)
+            if p < 0.05:
+                better_than_static.append(agent_name)
+            elif p < 0.1:
+                trending_better_than_static.append(agent_name)
 
     with open(args.improved_file, 'w') as handle:
         handle.write('Improved \n' + '\n'.join(improved) + '\n\n')

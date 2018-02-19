@@ -17,9 +17,9 @@ linear_gamma0_9_beam10_sepguess_ontopic_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,1
 mlp_gamma0_9_beam100_ontopic_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0
 linear_gamma1_0_beamfull_ontopic_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0
 mlp_gamma0_9_beam100_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0
-linear_gamma1_0_beam100_sepguess_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0
-mlp_gamma0_9_beamfull_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0
-linear_gamma1_0_beamfull_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0
+linear_gamma1_0_beam100_sepguess_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0
+mlp_gamma0_9_beamfull_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0
+linear_gamma1_0_beamfull_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0
 mlp_gamma1_0_beam10_ontopic_fixedlen,14.75,16.0,16.0,16.0,16.0,16.0,16.0,15.97,16.0,16.0
 linear_gamma0_9_beamfull_sepguess_ontopic_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0
 mlp_gamma0_9_beam10_ontopic_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0
@@ -39,7 +39,7 @@ mlp_gamma1_0_beam100_ontopic_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16
 linear_gamma0_9_beam10_sepguess_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0
 linear_gamma0_9_beam100_ontopic_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0
 linear_gamma0_9_beamfull_sepguess_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0
-mlp_gamma1_0_beam100_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0
+mlp_gamma1_0_beam100_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0
 linear_gamma0_9_beam100_fixedlen,16.0,16.0,16.0,16.0,16.0
 mlp_gamma0_9_beamfull_sepguess_fixedlen,15.55,16.0,16.0,16.0
 mlp_gamma0_9_beam10_fixedlen,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0,16.0
