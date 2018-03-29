@@ -11,6 +11,11 @@ import pickle
 # Imports for unpickling
 from StaticPolicy import StaticPolicy
 from ParallelRLPolicy import ParallelRLPolicy
+from TaskOrientedPolicy import TaskOrientedPolicy
+from ReinforceRLPolicy import ReinforceRLPolicy
+from ActorCriticRLPolicy import ActorCriticRLPolicy
+from KTDQRLPolicy import KTDQRLPolicy
+from AdvantageActorCriticRLPolicy import AdvantageActorCriticRLPolicy
 
 __author__ = 'aishwarya'
 
@@ -48,7 +53,8 @@ class ParallelDialogAgent(object):
                                                   self.predicates_with_classifiers)
 
         # Fields to maintain dialog state
-        self.candidate_regions = None       # Regions under discussion
+        self.active_test_regions = None       # Regions under discussion
+        self.active_train_regions = None
         self.description = None             # Description to understand
         self.current_predicates = None      # Labels relevant to understanding current description
         self.num_system_turns = None
@@ -56,10 +62,17 @@ class ParallelDialogAgent(object):
         self.target_region = None
 
         # Caching things useful within a dialog
-        self.candidate_regions_features = None  # Features of candidate regions
-        self.candidate_regions_nbrs = None      # Nearest neighbours of candidate regions
-        self.candidate_regions_densities = None # Densities of candidate regions
-        self.region_contents = None             # Objects and attributes in candidate regions
+        self.active_test_regions_features = None   # Features of candidate regions
+        self.active_train_regions_features = None  # Features of candidate regions
+
+        self.active_test_regions_nbrs = None      # Nearest neighbours of candidate regions
+        self.active_train_regions_nbrs = None     # Nearest neighbours of candidate regions
+
+        self.active_test_regions_densities = None   # Densities of candidate regions
+        self.active_train_regions_densities = None  # Densities of candidate regions
+
+        self.active_test_region_contents = None             # Objects and attributes in candidate regions
+        self.active_train_region_contents = None             # Objects and attributes in candidate regions
 
         # Labels acquired (within dialog)
         # This is a dict with label name as key, and (region_id, 0/1 label value) as value
@@ -107,12 +120,13 @@ class ParallelDialogAgent(object):
     # Load things that are required at start of an interaction
     # candidate_regions - List of region IDs (int) of candidate regions
     # description - Normalized string description of region
-    def setup_task(self, candidate_regions, description, region_contents, target_region):
-        prev_time = datetime.now()
-
-        self.candidate_regions = candidate_regions
+    def setup_task(self, active_test_regions, active_train_regions, description, active_test_region_contents,
+                   active_train_region_contents, target_region):
+        self.active_test_regions = active_test_regions
+        self.active_train_regions = active_train_regions
         self.description = description
-        self.region_contents = region_contents
+        self.active_test_region_contents = active_test_region_contents
+        self.active_train_region_contents = active_train_region_contents
         self.target_region = target_region
         self.num_system_turns = 0
 
@@ -124,61 +138,53 @@ class ParallelDialogAgent(object):
             if predicate not in self.predicates_with_classifiers:
                 self.predicates_without_classifiers.add(predicate)
 
-        cur_time = datetime.now()
-        # print 'Initial assignments: ' + str(cur_time - prev_time)
-        prev_time = datetime.now()
+        self.active_test_regions_features = dict()
+        self.active_train_regions_features = dict()
+        self.active_test_regions_densities = dict()
+        self.active_train_regions_densities = dict()
+        self.active_test_regions_nbrs = dict()
+        self.active_train_regions_nbrs = dict()
 
-        self.candidate_regions_features = dict()
-        self.candidate_regions_densities = dict()
-        self.candidate_regions_nbrs = dict()
-        for region in self.candidate_regions:
-            iter_prev_time = datetime.now()
-            self.candidate_regions_features[region] = self.classifier_manager.feature_dict[region]
-            iter_cur_time = datetime.now()
-            # print '\t\tTime to fetch features = ' + str(iter_cur_time - iter_prev_time)
-            iter_prev_time = datetime.now()
-            self.candidate_regions_densities[region] = self.classifier_manager.densities[region]
-            iter_cur_time = datetime.now()
-            # print '\t\tTime to fetch density = ' + str(iter_cur_time - iter_prev_time)
-            iter_prev_time = datetime.now()
-            self.candidate_regions_nbrs[region] = self.classifier_manager.nbrs[region]
-            iter_cur_time = datetime.now()
-            # print '\t\tTime to fetch nbrs = ' + str(iter_cur_time - iter_prev_time)
-            iter_prev_time = datetime.now()
-
-        cur_time = datetime.now()
-        # print 'Fetching region properties: ' + str(cur_time - prev_time)
-        prev_time = datetime.now()
+        for region in self.active_test_regions:
+            self.active_test_regions_features[region] = self.classifier_manager.active_test_feature_dict[region]
+            self.active_test_regions_densities[region] = self.classifier_manager.active_test_densities[region]
+            self.active_test_regions_nbrs[region] = self.classifier_manager.active_test_nbrs[region]
+        for region in self.active_train_regions:
+            self.active_train_regions_features[region] = self.classifier_manager.active_train_feature_dict[region]
+            self.active_train_regions_densities[region] = self.classifier_manager.active_train_densities[region]
+            self.active_train_regions_nbrs[region] = self.classifier_manager.active_train_nbrs[region]
 
         self.decisions = dict()
         self.get_decision_scores()
         self.labels_acquired = dict()
         self.policy_updates = list()
 
-        cur_time = datetime.now()
-        # print 'Completing setup: ' + str(cur_time - prev_time)
-
     def finish_task(self):
         # Precautions to make sure these get reset
-        self.candidate_regions = None
+        self.active_test_regions = None
+        self.active_train_regions = None
         self.description = None
         self.target_region = None
         self.current_predicates = None
         self.num_system_turns = None
-        self.candidate_regions_features = None
-        self.candidate_regions_densities = None
-        self.candidate_regions_nbrs = None
-        self.region_contents = None
+        self.active_test_regions_features = None
+        self.active_train_regions_features = None
+        self.active_test_regions_densities = None
+        self.active_train_regions_densities = None
+        self.active_test_regions_nbrs = None
+        self.active_train_regions_nbrs = None
+        self.active_test_region_contents = None
+        self.active_train_region_contents = None
         self.labels_acquired = None
         self.policy_updates = None
 
     def update_decision_score(self, predicate):
-        data_points = np.array([self.candidate_regions_features[region] for region in self.candidate_regions])
+        data_points = np.array([self.active_test_regions_features[region] for region in self.active_test_regions])
         decisions = self.classifier_manager.get_decisions(predicate, data_points)
         self.decisions[predicate] = decisions
 
     def get_decision_scores(self):
-        data_points = np.array([self.candidate_regions_features[region] for region in self.candidate_regions])
+        data_points = np.array([self.active_test_regions_features[region] for region in self.active_test_regions])
         for predicate in self.current_predicates:
             decisions = self.classifier_manager.get_decisions(predicate, data_points)
             self.decisions[predicate] = decisions
@@ -187,22 +193,22 @@ class ParallelDialogAgent(object):
     def ask_positive_example(self, predicate):
         # Find regions in the domain of discourse for which this predicate holds
         positive_regions = list()
-        for region in self.candidate_regions:
-            if predicate in self.region_contents[region]:
+        for region in self.active_train_regions:
+            if predicate in self.active_train_region_contents[region]:
                 positive_regions.append(region)
 
         if len(positive_regions) < 1:
             # No positive regions. You get to know that all are negative
-            labels_acquired = [(region, 0) for region in self.candidate_regions]
+            labels_acquired = [(region, 0) for region in self.active_train_regions]
         else:
             # Check which regions have been previously annotated as positive in this dialog
             previous_positive_regions = list()
             if predicate in self.labels_acquired:
-                previous_positive_regions = [region for region in self.candidate_regions if (region, 1)
+                previous_positive_regions = [region for region in self.active_train_regions if (region, 1)
                                              in self.labels_acquired[predicate]]
             new_positive_regions = list(set(positive_regions).difference(previous_positive_regions))
             if len(new_positive_regions) < 1:
-                labels_acquired = [(region, 0) for region in self.candidate_regions if region
+                labels_acquired = [(region, 0) for region in self.active_train_regions if region
                                    not in previous_positive_regions]
             else:
                 chosen_region = np.random.choice(new_positive_regions)
@@ -249,7 +255,7 @@ class ParallelDialogAgent(object):
 
     # Simulate the process of asking for a predicate for a region
     def ask_label(self, predicate, region):
-        if predicate in self.region_contents[region]:
+        if predicate in self.active_train_region_contents[region]:
             labels_acquired = [(region, 1)]
         else:
             labels_acquired = [(region, 0)]
@@ -272,16 +278,21 @@ class ParallelDialogAgent(object):
         dialog_state['decisions'] = copy.deepcopy(self.decisions)
         dialog_state['current_predicates'] = self.current_predicates
         dialog_state['seen_predicates'] = self.seen_predicates
-        dialog_state['candidate_regions'] = self.candidate_regions
+        dialog_state['active_test_regions'] = self.active_test_regions
+        dialog_state['active_train_regions'] = self.active_train_regions
+        dialog_state['active_train_regions'] = self.active_train_regions
         dialog_state['target_region'] = self.target_region
         dialog_state['current_kappas'] = dict()
         for predicate in self.current_predicates:
             dialog_state['current_kappas'][predicate] = self.classifier_manager.get_kappa(predicate)
         dialog_state['labels_acquired'] = copy.deepcopy(self.labels_acquired)
         dialog_state['predicates_without_classifiers'] = list(self.predicates_without_classifiers)
-        dialog_state['candidate_regions_features'] = self.candidate_regions_features
-        dialog_state['candidate_regions_densities'] = self.candidate_regions_densities
-        dialog_state['candidate_regions_nbrs'] = self.candidate_regions_nbrs
+        dialog_state['active_test_regions_features'] = self.active_test_regions_features
+        dialog_state['active_train_regions_features'] = self.active_train_regions_features
+        dialog_state['active_test_regions_densities'] = self.active_test_regions_densities
+        dialog_state['active_train_regions_densities'] = self.active_train_regions_densities
+        dialog_state['active_test_regions_nbrs'] = self.active_test_regions_nbrs
+        dialog_state['active_train_regions_nbrs'] = self.active_train_regions_nbrs
         dialog_state['num_dialogs_completed'] = self.num_dialogs_completed
         dialog_state['num_dialogs_successful'] = self.num_dialogs_successful
         dialog_state['predicate_uses'] = self.predicate_uses
@@ -304,15 +315,19 @@ class ParallelDialogAgent(object):
                 else:
                     self.predicate_successes[predicate] += 1
 
-    def run_dialog(self, candidate_regions, target_region, description, region_contents, testing=False):
-        self.setup_task(candidate_regions, description, region_contents, target_region)
+    def run_dialog(self, active_test_regions, active_train_regions, target_region, description,
+                   active_test_region_contents, active_train_region_contents, testing=False):
+        self.setup_task(active_test_regions, active_train_regions, description, active_test_region_contents,
+                        active_train_region_contents, target_region)
 
         dialog_complete = False
         dialog_stats = dict()
         dialog_stats['agent_name'] = self.agent_name
-        dialog_stats['num_regions'] = len(candidate_regions)
+        dialog_stats['num_test_regions'] = len(active_test_regions)
+        dialog_stats['num_train_regions'] = len(active_train_regions)
         dialog_stats['predicates'] = copy.deepcopy(self.current_predicates)
         dialog_stats['policy_updates'] = list()
+        dialog_stats['state_action_pairs'] = list()
 
         while not dialog_complete:
             prev_dialog_state = self.get_dialog_state()

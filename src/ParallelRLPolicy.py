@@ -76,6 +76,9 @@ class ParallelRLPolicy(AbstractPolicy):
         # Evaluating score of ask_positive_example (0-1)
         feature_vector.append(float(action['action'] == 'ask_positive_example'))
 
+        # Evaluating score of ask_label (0-1)
+        feature_vector.append(float(action['action'] == 'ask_label'))
+
         # Question is on-topic (0-1)
         feature_vector.append(float(self.on_topic))
 
@@ -83,48 +86,48 @@ class ParallelRLPolicy(AbstractPolicy):
         if 'predicate' in action:
             feature_vector.append(float(action['predicate'] in dialog_state['predicates_without_classifiers']))
         else:
-            feature_vector.append(0.0)
+            feature_vector.append(1.0)
 
         # Margin of object
         if 'region' in action:
-            data_point = np.array([dialog_state['candidate_regions_features'][action['region']]])
+            data_point = np.array([dialog_state['active_train_regions_features'][action['region']]])
             feature_vector.append(self.classifier_manager.get_margins(action['predicate'], data_point)[0])
         else:
-            feature_vector.append(0.0)
+            feature_vector.append(1.0)
 
         # Density of object
         if 'region' in action:
-            feature_vector.append(dialog_state['candidate_regions_densities'][action['region']])
+            feature_vector.append(dialog_state['active_train_regions_densities'][action['region']])
         else:
-            feature_vector.append(0.0)
+            feature_vector.append(1.0)
 
         # Fraction of k nearest neighbours of the object which are unlabelled
         if 'region' in action:
             # print "dialog_state['labels_acquired'] =", dialog_state['labels_acquired']
-            nbrs = [nbr for (nbr, sim) in dialog_state['candidate_regions_nbrs'][action['region']]]
+            nbrs = [nbr for (nbr, sim) in dialog_state['active_train_regions_nbrs'][action['region']]]
             labelled_regions = [region for (region, label_value) in dialog_state['labels_acquired'].items()]
             labelled_nbrs = [region for region in nbrs if region in labelled_regions]
             feature_vector.append(len(labelled_nbrs) / float(len(nbrs)))
         else:
-            feature_vector.append(1.0)
+            feature_vector.append(0.0)
 
         # Prev kappa of classifier of predicate
         if 'predicate' in action:
             feature_vector.append(self.classifier_manager.get_kappa(action['predicate']))
         else:
-            feature_vector.append(1.0)
+            feature_vector.append(0.0)
 
         # Frequency of use of the predicate - normalized
         if 'predicate' in action and action['predicate'] in dialog_state['predicate_uses']:
             feature_vector.append(dialog_state['predicate_uses'][action['predicate']] /
-                              float(dialog_state['num_dialogs_completed']))
+                                  float(dialog_state['num_dialogs_completed']))
         else:
             feature_vector.append(1.0)
 
         # Number of system turns used - normalized
-        feature_vector.append(dialog_state['num_system_turns'] / 10.0)
+        feature_vector.append(dialog_state['num_system_turns'] / 15.0)
 
-        # Frequency of use of the predicate - normalized
+        # Fraction of uses of predicate that resulted in successful dialogs
         if 'predicate' in action and action['predicate'] in dialog_state['predicate_successes'] \
                 and action['predicate'] in dialog_state['predicate_uses']:
             feature_vector.append(dialog_state['predicate_successes'][action['predicate']] /
@@ -145,7 +148,11 @@ class ParallelRLPolicy(AbstractPolicy):
     def get_q(self, dialog_state, action):
         if self.untrained:
             return 0.0
-        feature_vector = np.array([self.get_features(dialog_state, action)])
+        feature_vector = self.get_features(dialog_state, action)
+        if type(feature_vector) == list:
+            feature_vector = np.array([self.get_features(dialog_state, action)])
+        if (len(feature_vector.shape) == 2 and feature_vector.shape[1] == 1) or len(feature_vector.shape) > 2:
+            feature_vector = np.squeeze(np.array(feature_vector.T), axis=0)
         if len(feature_vector.shape) == 1:
             feature_vector = feature_vector.reshape(1, -1)
         return self.q.predict(feature_vector)
@@ -182,14 +189,14 @@ class ParallelRLPolicy(AbstractPolicy):
             self.untrained = False
 
     def get_next_action(self, dialog_state):
-        print 'In ParallelRLPolicy.get_next_action'
+        # print 'In ParallelRLPolicy.get_next_action'
         if self.stored_action is not None:
             return self.stored_action
         else:
             candidate_actions = self.get_candidate_actions(dialog_state)
-            print 'Got candidate actions'
+            # print 'Got candidate actions'
             q_values = [self.get_q(dialog_state, action) for action in candidate_actions]
-            print 'Got q values'
+            # print 'Got q values'
             max_q = max(q_values)
             max_q_idx = q_values.index(max_q)
             return candidate_actions[max_q_idx]

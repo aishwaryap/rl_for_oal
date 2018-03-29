@@ -8,6 +8,11 @@ from ParallelDialogAgent import ParallelDialogAgent
 # Imports for unpickling
 from StaticPolicy import StaticPolicy
 from ParallelRLPolicy import ParallelRLPolicy
+from ParallelRLPolicyWithLogging import ParallelRLPolicyWithLogging
+from ReinforceRLPolicy import ReinforceRLPolicy
+from ActorCriticRLPolicy import ActorCriticRLPolicy
+from KTDQRLPolicy import KTDQRLPolicy
+from AdvantageActorCriticRLPolicy import AdvantageActorCriticRLPolicy
 
 
 class ParallelPolicyInitDialogAgent(ParallelDialogAgent):
@@ -29,15 +34,16 @@ class ParallelPolicyInitDialogAgent(ParallelDialogAgent):
     def perform_policy_updates(self, policy_updates):
         self.target_policy.perform_updates(policy_updates)
 
-    def run_dialog(self, candidate_regions, target_region, description, region_contents, testing=False):
-        # print 'In run_dialog'
-        self.setup_task(candidate_regions, description, region_contents, target_region)
-        # print 'Setup task complete'
+    def run_dialog(self, active_test_regions, active_train_regions, target_region, description,
+                   active_test_region_contents, active_train_region_contents, testing=False):
+        self.setup_task(active_test_regions, active_train_regions, description, active_test_region_contents,
+                        active_train_region_contents, target_region)
 
         dialog_complete = False
         dialog_stats = dict()
         dialog_stats['agent_name'] = self.agent_name
-        dialog_stats['num_regions'] = len(candidate_regions)
+        dialog_stats['num_test_regions'] = len(active_test_regions)
+        dialog_stats['num_train_regions'] = len(active_train_regions)
         dialog_stats['predicates'] = copy.deepcopy(self.current_predicates)
         dialog_stats['policy_updates'] = list()
 

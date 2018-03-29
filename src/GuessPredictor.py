@@ -34,14 +34,14 @@ class GuessPredictor:
         self.fitted = False
 
     def compute_guess_scores(self, dialog_state):
-        positive_scores = np.zeros(len(dialog_state['candidate_regions']))
-        negative_scores = np.zeros(len(dialog_state['candidate_regions']))
+        positive_scores = np.zeros(len(dialog_state['active_test_regions']))
+        negative_scores = np.zeros(len(dialog_state['active_test_regions']))
         for predicate in dialog_state['decisions']:
             if predicate in dialog_state['current_kappas']:
                 positive_scores += (dialog_state['decisions'][predicate] > 0) * dialog_state['current_kappas'][predicate]
                 negative_scores += (dialog_state['decisions'][predicate] <= 0) * dialog_state['current_kappas'][predicate]
         if np.count_nonzero((positive_scores + negative_scores)) == 0:
-            return np.zeros(len(dialog_state['candidate_regions']))
+            return np.zeros(len(dialog_state['active_test_regions']))
         else:
             scores = positive_scores / (positive_scores + negative_scores)
             scores = scores.tolist()
@@ -54,7 +54,7 @@ class GuessPredictor:
         current_kappas = dialog_state['current_kappas'].items()
         current_kappas.sort(key=itemgetter(1))
 
-        # Calculate decision scores ff candidate regions
+        # Calculate decision scores of candidate regions
         scores = self.compute_guess_scores(dialog_state)
         max_score = max(scores)
         max_score_indices = [idx for (idx, score) in enumerate(scores) if score == max_score]
@@ -93,14 +93,14 @@ class GuessPredictor:
         else:
             feature_vector.append(0.0)
 
-        # Positive score (normalized) of top region
+        # Score (normalized) of top region
         feature_vector.append(max_score)
 
-        # Positive score (normalized) of second best region
-        feature_vector.append(second_max_score)
+        # Difference between scores of top and second highest region
+        feature_vector.append(max_score - second_max_score)
 
-        # Avg positive score (normalized) of regions
-        feature_vector.append(sum(scores) / len(scores))
+        # Difference between top score and avg score
+        feature_vector.append(max_score - (sum(scores) / len(scores)))
 
         # Decision of top classifier for top region
         if len(current_kappas) >= 1:
@@ -109,6 +109,15 @@ class GuessPredictor:
         else:
             feature_vector.append(0.0)
 
+        # Is decision of top classifier for second best region same as that of top region?
+        if len(current_kappas) >= 1:
+            top_classifier = current_kappas[-1][0]
+            top_region_decision = (dialog_state['decisions'][top_classifier][max_score_idx] > 0)
+            second_region_decision = (dialog_state['decisions'][top_classifier][second_max_score_idx] > 0)
+            feature_vector.append(float(top_region_decision != second_region_decision))
+        else:
+            feature_vector.append(1.0)
+
         # Decision of second best classifier for top region
         if len(current_kappas) >= 2:
             second_best_classifier = current_kappas[-2][0]
@@ -116,35 +125,34 @@ class GuessPredictor:
         else:
             feature_vector.append(0.0)
 
-        # Decision of top classifier for second best region
-        if len(current_kappas) >= 1:
-            top_classifier = current_kappas[-1][0]
-            feature_vector.append(float(dialog_state['decisions'][top_classifier][second_max_score_idx] > 0))
-        else:
-            feature_vector.append(0.0)
-
-        # Decision of second best classifier for second best region
+        # Is decision of second best classifier for second best region same as that of top region?
         if len(current_kappas) >= 2:
             second_best_classifier = current_kappas[-2][0]
-            feature_vector.append(float(dialog_state['decisions'][second_best_classifier][second_max_score_idx] > 0))
+            top_region_decision = (dialog_state['decisions'][second_best_classifier][max_score_idx] > 0)
+            second_region_decision = (dialog_state['decisions'][second_best_classifier][second_max_score_idx] > 0)
+            feature_vector.append(float(top_region_decision != second_region_decision))
         else:
-            feature_vector.append(0.0)
+            feature_vector.append(1.0)
 
-        # Avg decision of top classifier
+        # Difference between decision of top classifier for top region and avg decision of the classifier
         if len(current_kappas) >= 1:
             top_classifier = current_kappas[-1][0]
             decisions = [float(x) for x in (dialog_state['decisions'][top_classifier] > 0)]
-            feature_vector.append(sum(decisions) / len(decisions))
+            top_region_decision = (dialog_state['decisions'][top_classifier][max_score_idx] > 0)
+            avg_decision = sum(decisions) / len(decisions)
+            feature_vector.append(top_region_decision - avg_decision)
         else:
-            feature_vector.append(0.0)
+            feature_vector.append(1.0)
 
-        # Avg decision of second best classifier
+        # Difference between decision of second best classifier for top region and avg decision of the classifier
         if len(current_kappas) >= 2:
             second_best_classifier = current_kappas[-2][0]
             decisions = [float(x) for x in (dialog_state['decisions'][second_best_classifier] > 0)]
-            feature_vector.append(sum(decisions) / len(decisions))
+            avg_decision = sum(decisions) / len(decisions)
+            top_region_decision = (dialog_state['decisions'][second_best_classifier][max_score_idx] > 0)
+            feature_vector.append(top_region_decision - avg_decision)
         else:
-            feature_vector.append(0.0)
+            feature_vector.append(1.0)
 
         return feature_vector
 
@@ -153,7 +161,7 @@ class GuessPredictor:
         scores = self.compute_guess_scores(dialog_state)
         max_score = max(scores)
         max_score_indices = [idx for (idx, score) in enumerate(scores) if score == max_score]
-        target_idx = dialog_state['candidate_regions'].tolist().index(dialog_state['target_region'])
+        target_idx = dialog_state['active_test_regions'].tolist().index(dialog_state['target_region'])
         if target_idx in max_score_indices:
             return 1.0 / len(max_score_indices)
         else:

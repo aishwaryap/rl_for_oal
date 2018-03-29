@@ -26,5 +26,6 @@ python CondorizedParallelExperimentRunner.py \
     --num-threads=2 \
     --num-batches=2 \
     --num-dialogs-per-batch-per-thread=2 \
-    --batch-num=0
+    --active-train-batch-num=0 \
+    --active-test-batch-num=1
 

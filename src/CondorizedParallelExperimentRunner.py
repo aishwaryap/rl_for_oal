@@ -9,6 +9,7 @@ import math
 import pickle
 import ast
 import pylru
+import string
 from argparse import ArgumentParser
 from RegionDict import RegionDict
 from KeyedFileDict import KeyedFileDict
@@ -27,10 +28,10 @@ __author__ = 'aishwarya'
 # This is not derived from ExperimentRunner because almost all functions had to be changed
 class CondorizedParallelExperimentRunner:
     # min_regions, max_regions, mean_regions, std_dev_regions - Domain of discourse (Paramters for truncated Gaussian)
-    def __init__(self, dataset_dir, dialog_stats_filename, batch_regions, testing,
-                 min_regions, max_regions, mean_regions, std_dev_regions, classifier_manager,
+    def __init__(self, dataset_dir, dialog_stats_filename, active_train_batch_regions, active_test_batch_regions,
+                 testing, min_regions, max_regions, mean_regions, std_dev_regions, classifier_manager,
                  test_seen_predicates_file=None, test_predicates_with_classifiers_file=None,
-                 updates_file=None):
+                 updates_file=None, all_features_file=None):
         self.dataset_dir = dataset_dir
         self.testing = testing
         self.test_seen_predicates_file = test_seen_predicates_file
@@ -43,10 +44,13 @@ class CondorizedParallelExperimentRunner:
 
         self.classifier_manager = classifier_manager
 
-        self.batch_regions = batch_regions
-        self.region_set = set(self.batch_regions)
+        self.active_train_batch_regions = active_train_batch_regions
+        self.active_train_region_set = set(self.active_train_batch_regions)
+        self.active_test_batch_regions = active_test_batch_regions
+        self.active_test_region_set = set(self.active_test_batch_regions)
 
         self.updates_file = updates_file
+        self.all_features_file = all_features_file
 
         prev_time = datetime.now()
 
@@ -55,16 +59,21 @@ class CondorizedParallelExperimentRunner:
             os.path.join(self.dataset_dir, 'indoor/region_objects_unique.csv'),
             os.path.join(self.dataset_dir, 'indoor/region_attributes_unique.csv')
         ]
-        self.region_contents = dict()
-        for region in self.region_set:
-            self.region_contents[region] = list()
+        self.active_train_region_contents = dict()
+        self.active_test_region_contents = dict()
+        for region in self.active_train_region_set:
+            self.active_train_region_contents[region] = list()
+        for region in self.active_test_region_set:
+            self.active_test_region_contents[region] = list()
         for region_contents_file in region_contents_files:
             file_handle = open(region_contents_file)
             reader = csv.reader(file_handle, delimiter=',')
             for row in reader:
                 region_id = row[0]
-                if region_id in self.region_set:
-                    self.region_contents[region_id] += row[1:]
+                if region_id in self.active_train_region_set:
+                    self.active_train_region_contents[region_id] += row[1:]
+                elif region_id in self.active_test_region_set:
+                    self.active_test_region_contents[region_id] += row[1:]
             file_handle.close()
 
         cur_time = datetime.now()
@@ -82,21 +91,43 @@ class CondorizedParallelExperimentRunner:
         cur_time = datetime.now()
         print 'Reading region descriptions: ', str(cur_time - prev_time)
 
-        self.dialog_stats_header = ['agent_name', 'num_regions', 'success', 'num_system_turns']
+        self.dialog_stats_header = ['agent_name', 'num_train_regions', 'num_test_regions', 'success', 'num_system_turns']
         self.dialog_stats_filename = dialog_stats_filename
         self.dialog_stats_queue = Queue()
+
+    def get_random_string(self, string_length=5):
+        letters = list(string.ascii_lowercase)
+        random_str = np.random.choice(letters, size=string_length, replace=True)
+        return random_str
 
     def serial_operations_after_batch(self, agent, agent_file, dialog_stats_list):
         classifier_updates = [dialog_stats['classifier_updates'] for dialog_stats in dialog_stats_list
                               if 'classifier_updates' in dialog_stats]
         policy_updates = [dialog_stats['policy_updates'] for dialog_stats in dialog_stats_list
                           if 'policy_updates' in dialog_stats]
+
         policy_updates_flat = [item for sublist in policy_updates for item in sublist]
 
         if self.updates_file is not None:
             with open(self.updates_file, 'a+') as handle:
                 for update in policy_updates_flat:
                     handle.write(str(update) + '\n')
+
+        # Experience replay
+        policy_updates_flat = policy_updates_flat * 10
+        list_indices = np.random.permutation(len(policy_updates_flat))
+        policy_updates_flat = [policy_updates_flat[idx] for idx in list_indices]
+
+        if self.all_features_file is not None:
+            with open(self.all_features_file, 'a+') as handle:
+                writer = csv.writer(handle, delimiter=',')
+                for dialog_stats in dialog_stats_list:
+                    for update in dialog_stats['policy_updates']:
+                        key = self.get_random_string()
+                        if 'other_features' in update:
+                            for feature in update['other_features']:
+                                writer.writerow([key, 'not_chosen'] + feature)
+                            writer.writerow([key, 'chosen'] + update['feature'])
 
         seen_predicates = [dialog_stats['predicates'] for dialog_stats in dialog_stats_list]
         seen_predicates_flat = [item for sublist in seen_predicates for item in sublist]
@@ -116,25 +147,31 @@ class CondorizedParallelExperimentRunner:
 
     def sample_domain_of_discourse(self):
         # Sample number of regions from a truncated Gaussian
-        # num_regions = int(math.floor(scipy.stats.truncnorm.rvs(
-        #     (self.min_regions - self.mean_regions) / self.std_dev_regions,
-        #     (self.max_regions - self.mean_regions) / self.std_dev_regions,
-        #     loc=self.mean_regions, scale=self.std_dev_regions, size=1)))
-        num_regions = self.mean_regions
+        if self.min_regions == self.max_regions:
+            num_regions = self.min_regions
+        else:
+            num_regions = int(math.floor(scipy.stats.truncnorm.rvs(
+                (self.min_regions - self.mean_regions) / self.std_dev_regions,
+                (self.max_regions - self.mean_regions) / self.std_dev_regions,
+                loc=self.mean_regions, scale=self.std_dev_regions, size=1)))
 
         # Sample num_regions uniformly without replacement
-        regions = np.random.choice(self.batch_regions, num_regions)
-        return regions
+        active_test_regions = np.random.choice(self.active_test_batch_regions, num_regions)
+        active_train_regions = np.random.choice(self.active_train_batch_regions, 2 * num_regions)
+        return active_test_regions, active_train_regions
     
     def run_experiment(self, agent):
-        domain_of_discourse = self.sample_domain_of_discourse()
-        target_region = np.random.choice(domain_of_discourse)
-        # description = self.region_descriptions[target_region]
-        description = '_'.join(self.region_contents[target_region])
-        contents = dict()
-        for region in domain_of_discourse:
-            contents[region] = self.region_contents[region]
-        dialog_stats = agent.run_dialog(domain_of_discourse, target_region, description, contents, self.testing)
+        active_test_regions, active_train_regions = self.sample_domain_of_discourse()
+        target_region = np.random.choice(active_test_regions)
+        description = self.region_descriptions[target_region]
+        active_train_region_contents = dict()
+        for region in active_train_regions:
+            active_train_region_contents[region] = self.active_train_region_contents[region]
+        active_test_region_contents = dict()
+        for region in active_test_regions:
+            active_test_region_contents[region] = self.active_test_region_contents[region]
+        dialog_stats = agent.run_dialog(active_test_regions, active_train_regions, target_region, description,
+                                        active_test_region_contents, active_train_region_contents, self.testing)
         return dialog_stats
 
     def run_experiment_batch(self, agent, num_dialogs_per_batch_per_thread, batch_num, thread_num):
@@ -210,13 +247,13 @@ if __name__ == '__main__':
     arg_parser.add_argument('--dialog-stats-filename', type=str, required=True,
                             help='File to store dialog stats')
 
-    arg_parser.add_argument('--min-regions', type=int, default=3,
+    arg_parser.add_argument('--min-regions', type=int, default=4,
                             help='Min regions in discourse')
-    arg_parser.add_argument('--max-regions', type=int, default=20,
+    arg_parser.add_argument('--max-regions', type=int, default=4,
                             help='Max regions in discourse')
-    arg_parser.add_argument('--mean-regions', type=int, default=5,
+    arg_parser.add_argument('--mean-regions', type=int, default=4,
                             help='Mean regions in discourse')
-    arg_parser.add_argument('--std-dev-regions', type=float, default=0.5,
+    arg_parser.add_argument('--std-dev-regions', type=float, default=0.1,
                             help='Std dev of # regions in discourse')
 
     # Some special params needed to instantiate regions file dict
@@ -256,7 +293,9 @@ if __name__ == '__main__':
     arg_parser.add_argument('--num-dialogs-per-batch-per-thread', type=int, required=True,
                             help='Num dialogs to run per batch of experiments per thread')
 
-    arg_parser.add_argument('--batch-num', type=int, required=True,
+    arg_parser.add_argument('--active-train-batch-num', type=int, required=True,
+                            help='Batch of regions to use')
+    arg_parser.add_argument('--active-test-batch-num', type=int, required=True,
                             help='Batch of regions to use')
 
     arg_parser.add_argument('--test-seen-predicates-file', type=str, default=None,
@@ -266,6 +305,8 @@ if __name__ == '__main__':
 
     arg_parser.add_argument('--updates-file', type=str, default=None,
                             help='Optionally add this to write updates to file')
+    arg_parser.add_argument('--all-features-file', type=str, default=None,
+                            help='Optionally add this to write features of all candidate actions marking the one chosen')
 
     args = arg_parser.parse_args()
 
@@ -279,8 +320,16 @@ if __name__ == '__main__':
         regions_filename = os.path.join(args.dataset_dir, 'classifiers/data/train_regions.txt')
     with open(regions_filename) as regions_file:
         all_regions = regions_file.read().split('\n')
-    batch_regions = all_regions[args.batch_num * args.regions_batch_size:
-                                min((args.batch_num + 1) * args.regions_batch_size, len(all_regions))]
+
+    active_train_batch_regions = all_regions[args.active_train_batch_num * args.regions_batch_size:
+                                             min((args.active_train_batch_num + 1) * args.regions_batch_size,
+                                                 len(all_regions))]
+    split_point = int(math.floor(0.6 * len(active_train_batch_regions)))
+    active_test_batch_regions = active_train_batch_regions[split_point:]
+    active_train_batch_regions = active_train_batch_regions[:split_point]
+    # active_test_batch_regions = all_regions[args.active_test_batch_num * args.regions_batch_size:
+    #                                         min((args.active_test_batch_num + 1) * args.regions_batch_size,
+    #                                             len(all_regions))]
 
     cur_time = datetime.now()
     print 'Reading regions: ', str(cur_time - prev_time)
@@ -288,68 +337,108 @@ if __name__ == '__main__':
 
     # Instantiate region dicts (because this can't be pickled)
     if args.testing:
-        features_file = os.path.join(args.dataset_dir, 'classifiers/data/features/test/' + str(args.batch_num) + '.csv')
-        densities_file = os.path.join(args.dataset_dir, 'densities/test/' + str(args.batch_num) + '.csv')
-        nbrs_file = os.path.join(args.dataset_dir, 'nbrs/test/' + str(args.batch_num) + '.csv')
+        active_train_features_file = os.path.join(args.dataset_dir, 'classifiers/data/features/test/' +
+                                                  str(args.active_train_batch_num) + '.csv')
+        active_test_features_file = os.path.join(args.dataset_dir, 'classifiers/data/features/test/' +
+                                                 str(args.active_test_batch_num) + '.csv')
+        active_train_densities_file = os.path.join(args.dataset_dir, 'densities/test/' +
+                                                   str(args.active_train_batch_num) + '.csv')
+        active_test_densities_file = os.path.join(args.dataset_dir, 'densities/test/' +
+                                                  str(args.active_test_batch_num) + '.csv')
+        active_train_nbrs_file = os.path.join(args.dataset_dir, 'nbrs/test/' + str(args.active_train_batch_num)
+                                              + '.csv')
+        active_test_nbrs_file = os.path.join(args.dataset_dir, 'nbrs/test/' + str(args.active_test_batch_num) + '.csv')
     else:
-        features_file = os.path.join(args.dataset_dir, 'classifiers/data/features/train/' + str(args.batch_num) + '.csv')
-        densities_file = os.path.join(args.dataset_dir, 'densities/train/' + str(args.batch_num) + '.csv')
-        nbrs_file = os.path.join(args.dataset_dir, 'nbrs/train/' + str(args.batch_num) + '.csv')
+        active_train_features_file = os.path.join(args.dataset_dir, 'classifiers/data/features/train/' +
+                                                  str(args.active_train_batch_num) + '.csv')
+        active_test_features_file = os.path.join(args.dataset_dir, 'classifiers/data/features/train/' +
+                                                 str(args.active_test_batch_num) + '.csv')
+        active_train_densities_file = os.path.join(args.dataset_dir, 'densities/train/' +
+                                                   str(args.active_train_batch_num) + '.csv')
+        active_test_densities_file = os.path.join(args.dataset_dir, 'densities/train/' +
+                                                  str(args.active_test_batch_num) + '.csv')
+        active_train_nbrs_file = os.path.join(args.dataset_dir, 'nbrs/train/' + str(args.active_train_batch_num)
+                                              + '.csv')
+        active_test_nbrs_file = os.path.join(args.dataset_dir, 'nbrs/train/' + str(args.active_test_batch_num) + '.csv')
 
-    features_dict = dict()
-    with open(features_file) as handle:
+    active_train_features_dict = dict()
+    active_test_features_dict = dict()
+    with open(active_train_features_file) as handle:
         reader = csv.reader(handle, delimiter=',')
         row_idx = 0
         for row in reader:
-            features_dict[batch_regions[row_idx]] = [float(x) for x in row]
+            if row_idx < len(active_train_batch_regions):
+                active_train_features_dict[active_train_batch_regions[row_idx]] = [float(x) for x in row]
+            else:
+                idx = row_idx - len(active_train_batch_regions)
+                active_test_features_dict[active_test_batch_regions[idx]] = [float(x) for x in row]
             row_idx += 1
-
-    print 'Num features =', len(features_dict.keys())
-    print 'Some feature keys:', features_dict.keys()[:10]
+    # active_test_features_dict = dict()
+    # with open(active_test_features_file) as handle:
+    #     reader = csv.reader(handle, delimiter=',')
+    #     row_idx = 0
+    #     for row in reader:
+    #         active_test_features_dict[active_test_batch_regions[row_idx]] = [float(x) for x in row]
+    #         row_idx += 1
 
     cur_time = datetime.now()
     print 'Instantiating Feature cache: ', str(cur_time - prev_time)
     prev_time = cur_time
 
-    densities = np.loadtxt(densities_file, dtype=np.float, delimiter=',')
-    densities_dict = dict(zip(batch_regions, densities.tolist()))
-
-    print 'Num densities =', len(densities_dict.keys())
-    print 'Some densities keys:', densities_dict.keys()[:10]
+    active_train_densities = np.loadtxt(active_train_densities_file, dtype=np.float, delimiter=',')
+    active_test_densities = active_train_densities[split_point:]
+    active_train_densities = active_train_densities[:split_point]
+    active_train_densities_dict = dict(zip(active_train_batch_regions, active_train_densities.tolist()))
+    # active_test_densities = np.loadtxt(active_test_densities_file, dtype=np.float, delimiter=',')
+    active_test_densities_dict = dict(zip(active_test_batch_regions, active_test_densities.tolist()))
 
     cur_time = datetime.now()
     print 'Instantiating densities cache: ', str(cur_time - prev_time)
     prev_time = cur_time
 
-    nbrs_dict = dict()
-    with open(nbrs_file) as handle:
+    active_train_nbrs_dict = dict()
+    active_test_nbrs_dict = dict()
+    with open(active_train_nbrs_file) as handle:
         row_idx = 0
         for row in handle:
-            nbrs_dict[batch_regions[row_idx]] = ast.literal_eval(row)
+            if row_idx < len(active_train_batch_regions):
+                active_train_nbrs_dict[active_train_batch_regions[row_idx]] = ast.literal_eval(row)
+            else:
+                idx = row_idx - len(active_train_batch_regions)
+                active_test_nbrs_dict[active_test_batch_regions[idx]] = ast.literal_eval(row)
             row_idx += 1
-
-    print 'Num nbrs =', len(nbrs_dict.keys())
-    print 'Some nbrs keys:', nbrs_dict.keys()[:10]
+    # active_test_nbrs_dict = dict()
+    # with open(active_test_nbrs_file) as handle:
+    #     row_idx = 0
+    #     for row in handle:
+    #         active_test_nbrs_dict[active_test_batch_regions[row_idx]] = ast.literal_eval(row)
+    #         row_idx += 1
 
     cur_time = datetime.now()
     print 'Instantiating neighbours cache: ', str(cur_time - prev_time)
     prev_time = cur_time
 
     # Instantiate classifier manager
-    classifiers_manager = ClassifiersManager(features_dict, args.classifiers_dir, args.kappas_file, args.train_labels_dir,
-                                             args.val_labels_dir, densities_dict, nbrs_dict, args.classifiers_cache_size, args.labels_cache_size,
-                                             args.min_labels_before_val_set, args.val_label_fraction, args.max_labels_in_val_set)
+    classifiers_manager = ClassifiersManager(active_train_features_dict, active_test_features_dict,
+                                             args.classifiers_dir, args.kappas_file,
+                                             args.train_labels_dir, args.val_labels_dir,
+                                             active_train_densities_dict, active_test_densities_dict,
+                                             active_train_nbrs_dict, active_test_nbrs_dict,
+                                             args.classifiers_cache_size, args.labels_cache_size,
+                                             args.min_labels_before_val_set, args.val_label_fraction,
+                                             args.max_labels_in_val_set)
 
     cur_time = datetime.now()
     print 'Instantiating classifier manager: ', str(cur_time - prev_time)
     prev_time = cur_time
 
-    experiment_runner = CondorizedParallelExperimentRunner(args.dataset_dir, args.dialog_stats_filename, batch_regions,
+    experiment_runner = CondorizedParallelExperimentRunner(args.dataset_dir, args.dialog_stats_filename,
+                                                           active_train_batch_regions, active_test_batch_regions,
                                                            args.testing, args.min_regions,
                                                            args.max_regions, args.mean_regions, args.std_dev_regions,
                                                            classifiers_manager, args.test_seen_predicates_file,
                                                            args.test_predicates_with_classifiers_file,
-                                                           args.updates_file)
+                                                           args.updates_file, args.all_features_file)
 
     num_batches_needed = args.num_batches - experiment_runner.get_num_batches_complete(
         args.num_threads, args.num_dialogs_per_batch_per_thread)

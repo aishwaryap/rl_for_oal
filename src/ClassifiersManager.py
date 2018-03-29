@@ -6,6 +6,7 @@ import pylru
 import os
 from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import cohen_kappa_score
+from sklearn.utils.class_weight import compute_class_weight
 import ast
 
 from KeyedFileDict import KeyedFileDict
@@ -15,12 +16,16 @@ __author__ = 'aishwarya'
 
 class ClassifiersManager:
     # Maintain separately a beam of the bottom-k kappas (k worst classifiers)
-    def __init__(self, feature_dict, classifiers_dir, kappas_file, train_labels_dir, val_labels_dir, densities, nbrs,
-                 classifiers_cache_size, labels_cache_size, min_labels_before_val_set, val_label_fraction,
-                 max_labels_in_val_set):
-        self.feature_dict = feature_dict
-        self.densities = densities
-        self.nbrs = nbrs
+    def __init__(self, active_train_feature_dict, active_test_feature_dict, classifiers_dir, kappas_file,
+                 train_labels_dir, val_labels_dir, active_train_densities, active_test_densities, active_train_nbrs,
+                 active_test_nbrs, classifiers_cache_size, labels_cache_size, min_labels_before_val_set,
+                 val_label_fraction, max_labels_in_val_set):
+        self.active_train_feature_dict = active_train_feature_dict
+        self.active_test_feature_dict = active_test_feature_dict
+        self.active_train_densities = active_train_densities
+        self.active_test_densities = active_test_densities
+        self.active_train_nbrs = active_train_nbrs
+        self.active_test_nbrs = active_test_nbrs
 
         # Create LRU caches for accessing classifiers, labels and kappas
         classifiers_dict = KeyedFileDict(classifiers_dir, loading_mode='pickle')
@@ -105,16 +110,32 @@ class ClassifiersManager:
             # print 'new_train_labels =', new_train_labels
             regions = [region for (region, label) in new_train_labels]
             labels = [label for (region, label) in new_train_labels]
+
             features = None
             for region in regions:
-                feature = np.array(self.feature_dict[region])
+                if region in self.active_train_feature_dict.keys():
+                    feature = self.active_train_feature_dict[region]
+                else:
+                    feature = self.active_test_feature_dict[region]
+                feature = np.array(feature)
                 if features is None:
                     features = feature
                 else:
                     features = np.vstack((features, feature))
             if len(features.shape) == 1:
                 features = features.reshape(1, -1)
-            classifier.partial_fit(features, labels, classes=[0, 1])
+
+            train_labels = [label for (region, label) in self.train_labels[predicate]]
+            # print 'train_labels =', train_labels
+            if np.unique(train_labels).shape[0] < 2:
+                class_weights = [0.5, 0.5]
+            else:
+                class_weights = compute_class_weight('balanced', classes=[0, 1], y=train_labels)
+            # print 'class_weights =', class_weights
+            # print 'labels =', labels
+            sample_weights = [class_weights[label] for label in labels]
+
+            classifier.partial_fit(features, labels, classes=[0, 1], sample_weight=sample_weights)
             self.classifiers[predicate] = classifier
 
         if predicate in self.val_labels.keys():
@@ -133,7 +154,10 @@ class ClassifiersManager:
             if len(set(labels)) == 2:
                 features = None
                 for region in regions:
-                    feature = self.feature_dict[region]
+                    if region in self.active_train_feature_dict.keys():
+                        feature = self.active_train_feature_dict[region]
+                    else:
+                        feature = self.active_test_feature_dict[region]
                     if features is None:
                         features = feature
                     else:
@@ -157,7 +181,11 @@ class ClassifiersManager:
             if len(set(labels)) == 2:
                 features = None
                 for region in regions:
-                    feature = np.array(self.feature_dict[region])
+                    if region in self.active_train_feature_dict.keys():
+                        feature = self.active_train_feature_dict[region]
+                    else:
+                        feature = self.active_test_feature_dict[region]
+                    feature = np.array(feature)
                     if features is None:
                         features = feature
                     else:

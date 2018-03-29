@@ -29,8 +29,8 @@ class AbstractPolicy(object):
                 ((1.0 - kappa) / (1.0 - self.max_prob_kappa)) * float(self.max_prob_weight - self.min_prob_weight))
 
     def get_guess(self, dialog_state):
-        positive_scores = np.zeros(len(dialog_state['candidate_regions']))
-        negative_scores = np.zeros(len(dialog_state['candidate_regions']))
+        positive_scores = np.zeros(len(dialog_state['active_test_regions']))
+        negative_scores = np.zeros(len(dialog_state['active_test_regions']))
         for predicate in dialog_state['current_predicates']:
             positive_scores += (dialog_state['decisions'][predicate] > 0) * dialog_state['current_kappas'][predicate]
             negative_scores += (dialog_state['decisions'][predicate] <= 0) * dialog_state['current_kappas'][predicate]
@@ -45,7 +45,7 @@ class AbstractPolicy(object):
         max_score_idx = scores.index(max_score)
         action = {
                     'action': 'make_guess',
-                    'guess': dialog_state['candidate_regions'][max_score_idx],
+                    'guess': dialog_state['active_test_regions'][max_score_idx],
                     'score': max_score
                   }
         return action
@@ -63,19 +63,19 @@ class AbstractPolicy(object):
         regions_labelled_in_dialog = set()
         if predicate in dialog_state['labels_acquired']:
             regions_labelled_in_dialog = set([region for (region, label) in dialog_state['labels_acquired'][predicate]])
-        output = [region for region in dialog_state['candidate_regions'] if region not in previously_labelled_regions
+        output = [region for region in dialog_state['active_train_regions'] if region not in previously_labelled_regions
                   and region not in regions_labelled_in_dialog]
         # print '\n\n\nGot regions for', predicate
         return output
 
-    def get_min_margin_region(self, predicate, candidate_regions, dialog_state):
+    def get_min_margin_region(self, predicate, active_train_regions, dialog_state):
         # print 'In AbstractPolicy.get_min_margin_region'
-        data_points = np.array([dialog_state['candidate_regions_features'][region] for region in candidate_regions])
+        data_points = np.array([dialog_state['active_train_regions_features'][region] for region in active_train_regions])
         # print 'data_points.shape = ', data_points.shape
         margins = self.classifier_manager.get_margins(predicate, data_points).tolist()
         # print 'margins = ', margins
         min_margin = min(margins)
-        min_margin_region = candidate_regions[margins.index(min_margin)]
+        min_margin_region = active_train_regions[margins.index(min_margin)]
         # print 'min_margin_region = ', min_margin_region
         return min_margin_region
 
@@ -161,7 +161,7 @@ class AbstractPolicy(object):
                         predicate_questions = [(predicate, region) for region in possible_regions]
                     else:
                         data_points = np.array(
-                            [dialog_state['candidate_regions_features'][region] for region in possible_regions])
+                            [dialog_state['active_train_regions_features'][region] for region in possible_regions])
                         margins = self.classifier_manager.get_margins(predicate, data_points)
                         margins_argsort = np.argsort(margins).tolist()
                         predicate_questions += [(predicate, region) for region in

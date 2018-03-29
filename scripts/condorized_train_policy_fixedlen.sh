@@ -1,4 +1,5 @@
 AGENT_NAME=$1
+REWARD=$2
 
 ./create_agent_dirs.sh $AGENT_NAME
 
@@ -7,6 +8,7 @@ cd ../src
 python ParallelDialogAgent.py \
     --agent-name=$AGENT_NAME \
     --force-guess-turns=15 \
+    --success-reward=$REWARD \
     --policy-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/policy.pkl \
     --seen-predicates-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/seen_predicates.txt \
     --predicates-with-classifiers-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/predicates_with_classifiers.txt \
@@ -23,5 +25,6 @@ python CondorizedParallelExperimentRunner.py \
     --num-threads=10 \
     --num-batches=100 \
     --num-dialogs-per-batch-per-thread=10 \
-    --batch-num=0
+    --active-train-batch-num=0 \
+    --active-test-batch-num=1
 
