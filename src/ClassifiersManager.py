@@ -6,6 +6,7 @@ import pylru
 import os
 from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import cohen_kappa_score
+from sklearn.metrics import f1_score
 from sklearn.utils.class_weight import compute_class_weight
 import ast
 
@@ -111,17 +112,14 @@ class ClassifiersManager:
             regions = [region for (region, label) in new_train_labels]
             labels = [label for (region, label) in new_train_labels]
 
-            features = None
+            features = []
             for region in regions:
                 if region in self.active_train_feature_dict.keys():
                     feature = self.active_train_feature_dict[region]
                 else:
                     feature = self.active_test_feature_dict[region]
-                feature = np.array(feature)
-                if features is None:
-                    features = feature
-                else:
-                    features = np.vstack((features, feature))
+                features += [feature]
+            features = np.array(features)
             if len(features.shape) == 1:
                 features = features.reshape(1, -1)
 
@@ -152,22 +150,21 @@ class ClassifiersManager:
             if len(regions) != len(labels):
                 raise RuntimeError('len(regions) = ' + str(len(regions)) + ', len(labels) = ' + str(len(labels)))
             if len(set(labels)) == 2:
-                features = None
+                features = []
                 for region in regions:
                     if region in self.active_train_feature_dict.keys():
                         feature = self.active_train_feature_dict[region]
                     else:
                         feature = self.active_test_feature_dict[region]
-                    if features is None:
-                        features = feature
-                    else:
-                        features = np.vstack((features, feature))
+                    features += feature
+                features = np.array(features)
                 if len(features.shape) == 1:
                     features = features.reshape(1, -1)
                 preds = classifier.predict(features)
 
                 # Compute Kappa and normalize to 0-1
-                kappa = (cohen_kappa_score(labels, preds, labels=[0, 1]) + 1.0) / 2.0
+                # kappa = (cohen_kappa_score(labels, preds, labels=[0, 1]) + 1.0) / 2.0
+                kappa = f1_score(labels, preds)
                 # print 'In compute_val_set_kappa, labels = ', labels, ', preds =', preds, ', kappa =', kappa,
                 # print 'press enter'
                 # x = raw_input()
@@ -179,23 +176,21 @@ class ClassifiersManager:
             regions = [region for (region, label) in self.train_labels[predicate]]
             labels = [label for (region, label) in self.train_labels[predicate]]
             if len(set(labels)) == 2:
-                features = None
+                features = []
                 for region in regions:
                     if region in self.active_train_feature_dict.keys():
                         feature = self.active_train_feature_dict[region]
                     else:
                         feature = self.active_test_feature_dict[region]
-                    feature = np.array(feature)
-                    if features is None:
-                        features = feature
-                    else:
-                        features = np.vstack((features, feature))
+                    features += [feature]
+                features = np.array(features)
                 if len(features.shape) == 1:
                     features = features.reshape(1, -1)
 
                 preds = list()
                 for idx in range(len(labels)):
-                    classifier = self.get_initial_classifier()
+                    # classifier = self.get_initial_classifier()
+                    classifier = SGDClassifier(loss='hinge', class_weight='balanced')
                     train_features = np.vstack((features[:idx, :], features[idx+1:, :]))
                     train_labels = np.array(labels[:idx] + labels[idx+1:])
                     if np.unique(train_labels).shape[0] == 2:
@@ -206,7 +201,8 @@ class ClassifiersManager:
                         preds.append(labels[idx])
 
                 # Compute Kappa and normalize to 0-1
-                kappa = (cohen_kappa_score(labels, preds, labels=[0, 1]) + 1.0) / 2.0
+                # kappa = (cohen_kappa_score(labels, preds, labels=[0, 1]) + 1.0) / 2.0
+                kappa = f1_score(labels, preds)
                 # print 'In compute_crossval_kappa, labels = ', labels, ', preds =', preds, ', kappa =', kappa,
                 # print 'press enter'
                 # x = raw_input()
