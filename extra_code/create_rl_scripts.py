@@ -12,7 +12,7 @@ condor_out_dir = '/scratch/cluster/aish/rl_for_oal/condor/out/'
 
 
 def get_agent_name(algorithm, model_type, gamma, beam_size, guess_predictor, on_topic, reward, alpha):
-    agent_name = 'classifier_init_' + algorithm + '_' + model_type + '_gamma' + re.sub('\.', '_', str(gamma)) \
+    agent_name = 'per_' + algorithm + '_' + model_type + '_gamma' + re.sub('\.', '_', str(gamma)) \
                  + '_reward' + re.sub('\.', '_', str(reward)) + '_alpha' + re.sub('\.', '_', str(alpha))
     if beam_size is not None:
         agent_name = agent_name + '_beam' + str(beam_size)
