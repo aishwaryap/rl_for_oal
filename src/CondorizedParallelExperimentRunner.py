@@ -95,6 +95,9 @@ class CondorizedParallelExperimentRunner:
         self.dialog_stats_filename = dialog_stats_filename
         self.dialog_stats_queue = Queue()
 
+        self.successful_policy_updates = list()
+        self.failed_policy_updates = list()
+
     def get_random_string(self, string_length=5):
         letters = list(string.ascii_lowercase)
         random_str = np.random.choice(letters, size=string_length, replace=True)
@@ -103,20 +106,34 @@ class CondorizedParallelExperimentRunner:
     def serial_operations_after_batch(self, agent, agent_file, dialog_stats_list):
         classifier_updates = [dialog_stats['classifier_updates'] for dialog_stats in dialog_stats_list
                               if 'classifier_updates' in dialog_stats]
-        policy_updates = [dialog_stats['policy_updates'] for dialog_stats in dialog_stats_list
-                          if 'policy_updates' in dialog_stats]
 
-        policy_updates_flat = [item for sublist in policy_updates for item in sublist]
+        successful_policy_updates = [dialog_stats['policy_updates'] for dialog_stats in dialog_stats_list
+                                     if 'policy_updates' in dialog_stats and dialog_stats['success'] == 1]
+
+        failed_policy_updates = [dialog_stats['policy_updates'] for dialog_stats in dialog_stats_list
+                                 if 'policy_updates' in dialog_stats and dialog_stats['success'] == 0]
+
+        successful_policy_updates_flat = [item for sublist in successful_policy_updates for item in sublist]
+        failed_policy_updates_flat = [item for sublist in failed_policy_updates for item in sublist]
 
         if self.updates_file is not None:
             with open(self.updates_file, 'a+') as handle:
-                for update in policy_updates_flat:
+                for update in successful_policy_updates_flat + failed_policy_updates_flat:
                     handle.write(str(update) + '\n')
 
         # Experience replay
-        policy_updates_flat = policy_updates_flat * 10
-        list_indices = np.random.permutation(len(policy_updates_flat))
-        policy_updates_flat = [policy_updates_flat[idx] for idx in list_indices]
+        self.successful_policy_updates += successful_policy_updates_flat
+        self.failed_policy_updates += failed_policy_updates_flat
+        num_updates = 20 * len(dialog_stats_list)
+        positive_fraction = 0.5
+        num_positive_updates = int(num_updates * positive_fraction)
+        num_negative_updates = int(num_updates * (1.0 - positive_fraction))
+        successful_list_indices = np.random.permutation(len(self.successful_policy_updates))[:num_positive_updates]
+        failed_list_indices = np.random.permutation(len(self.failed_policy_updates))[:num_negative_updates]
+
+        policy_updates = successful_policy_updates_flat + failed_policy_updates_flat + \
+                         [self.successful_policy_updates[idx] for idx in successful_list_indices] + \
+                         [self.failed_policy_updates[idx] for idx in failed_list_indices]
 
         if self.all_features_file is not None:
             with open(self.all_features_file, 'a+') as handle:
@@ -135,8 +152,8 @@ class CondorizedParallelExperimentRunner:
         agent.seen_predicates = agent.seen_predicates.union(seen_predicates_flat)
         if len(classifier_updates) > 0:
             agent.perform_classifier_updates(classifier_updates)
-        if len(policy_updates_flat) > 0:
-            agent.perform_policy_updates(policy_updates_flat)
+        if len(policy_updates) > 0:
+            agent.perform_policy_updates(policy_updates)
         agent.save(agent_file)
         dialog_stats_file = open(self.dialog_stats_filename, 'a+')
         dialog_stats_writer = csv.writer(dialog_stats_file, delimiter=',')
