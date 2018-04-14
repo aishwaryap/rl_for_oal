@@ -12,7 +12,7 @@ condor_out_dir = '/scratch/cluster/aish/rl_for_oal/condor/out/'
 
 
 def get_agent_name(algorithm, model_type, gamma, beam_size, guess_predictor, on_topic, reward, alpha):
-    agent_name = algorithm + '_' + model_type + '_gamma' + re.sub('\.', '_', str(gamma)) \
+    agent_name = 'classifier_init_' + algorithm + '_' + model_type + '_gamma' + re.sub('\.', '_', str(gamma)) \
                  + '_reward' + re.sub('\.', '_', str(reward)) + '_alpha' + re.sub('\.', '_', str(alpha))
     if beam_size is not None:
         agent_name = agent_name + '_beam' + str(beam_size)
@@ -45,10 +45,11 @@ def create_condor_script(filename, script_to_run, args_str):
 
 
 def main():
-    create_policies_filename = '../scripts/create_policies.sh'
-    condor_submit_init_filename = '../scripts/condor_submit_init.sh'
-    condor_submit_train_filename = '../scripts/condor_submit_train.sh'
-    condor_submit_test_filename = '../scripts/condor_submit_test.sh'
+    create_policies_prefix = '../scripts/create_policies'
+    delete_policies_prefix = '../scripts/delete_policies'
+    condor_submit_init_prefix = '../scripts/condor_submit_init'
+    condor_submit_train_prefix = '../scripts/condor_submit_train'
+    condor_submit_test_prefix = '../scripts/condor_submit_test'
 
     submit_machines = ['uvanimor-' + str(i) for i in range(1, 11)] + ['narsil-' + str(i) for i in range(1, 14)] + \
                       ['roadkill', 'streetpizza']
@@ -72,64 +73,90 @@ def main():
                         or (algorithm == 'reinforce' and model_type == 'mlp')]
     settings = [setting for setting in settings if setting not in invalid_settings]
 
-    create_policies_file = open(create_policies_filename, 'w')
+    create_policies_filenames = [create_policies_prefix + str(i) + '.sh' for i in range(4)]
+    condor_submit_init_filenames = [condor_submit_init_prefix + str(i) + '.sh' for i in range(4)]
+    condor_submit_train_filenames = [condor_submit_train_prefix + str(i) + '.sh' for i in range(4)]
+    condor_submit_test_filenames = [condor_submit_test_prefix + str(i) + '.sh' for i in range(4)]
+    delete_policies_filenames = [delete_policies_prefix + str(i) + '.sh' for i in range(4)]
+
+    create_policies_files = [open(create_policies_filename, 'w')
+                             for create_policies_filename in create_policies_filenames]
+    condor_submit_init_files = [open(condor_submit_init_filename, 'w')
+                                for condor_submit_init_filename in condor_submit_init_filenames]
+    condor_submit_train_files = [open(condor_submit_train_filename, 'w')
+                                 for condor_submit_train_filename in condor_submit_train_filenames]
+    condor_submit_test_files = [open(condor_submit_test_filename, 'w')
+                                for condor_submit_test_filename in condor_submit_test_filenames]
+    delete_policies_files = [open(delete_policies_filename, 'w')
+                             for delete_policies_filename in delete_policies_filenames]
 
     script_num = 0
-    condor_submit_init_file = open(condor_submit_init_filename, 'w')
-    condor_submit_train_file = open(condor_submit_train_filename, 'w')
-    condor_submit_test_file = open(condor_submit_test_filename, 'w')
 
     dirs_to_create = [condor_dir, condor_scripts_dir, condor_log_dir, condor_err_dir, condor_out_dir]
     for dir_name in dirs_to_create:
         if not os.path.isdir(dir_name):
             os.mkdir(dir_name)
 
-    create_policies_file.write('cd ../src\n\n')
-    create_policies_file.write('let n=1\n\n')
+    for create_policies_file in create_policies_files:
+        create_policies_file.write('cd ../src\n\n')
+        create_policies_file.write('let n=1\n\n')
 
     for (algorithm, model_type, gamma, beam_size, guess_predictor, on_topic, alpha, reward) in settings:
         agent_name = get_agent_name(algorithm, model_type, gamma, beam_size, guess_predictor, on_topic, reward, alpha)
 
+        if algorithm in ['q', 'q_fixedlen', 'ktdq'] and beam_size in [1, None]:
+            submit_idx = 0
+        elif algorithm in ['q', 'q_fixedlen', 'ktdq']:
+            submit_idx = 1
+        elif beam_size in [1, None]:
+            submit_idx = 2
+        else:
+            submit_idx = 3
+
         # Call scripts to create policy
-        create_policies_file.write('# -----------------------------------------------------------------------------\n')
-        create_policies_file.write('AGENT_NAME=' + agent_name + '\n')
-        create_policies_file.write('cd ../scripts\n')
-        create_policies_file.write('./remove_agent_dirs.sh $AGENT_NAME\n')
-        create_policies_file.write('./create_agent_dirs.sh $AGENT_NAME\n')
-        create_policies_file.write('cd ../src\n')
+        create_policies_files[submit_idx].write('# -----------------------------------------------------------------------------\n')
+        create_policies_files[submit_idx].write('AGENT_NAME=' + agent_name + '\n')
+        create_policies_files[submit_idx].write('cd ../scripts\n')
+        create_policies_files[submit_idx].write('./remove_agent_dirs.sh $AGENT_NAME\n')
+        create_policies_files[submit_idx].write('./create_agent_dirs.sh $AGENT_NAME\n')
+        create_policies_files[submit_idx].write('cd ../src\n')
+
+        delete_policies_files[submit_idx].write('./remove_agent_dirs.sh ' + agent_name + '\n')
 
         if algorithm in ['q', 'q_fixedlen']:
-            create_policies_file.write('python ParallelRLPolicy.py \\\n')
+            create_policies_files[submit_idx].write('python ParallelRLPolicy.py \\\n')
         elif algorithm == 'ktdq':
-            create_policies_file.write('python KTDQRLPolicy.py \\\n')
+            create_policies_files[submit_idx].write('python KTDQRLPolicy.py \\\n')
         elif algorithm == 'reinforce':
-            create_policies_file.write('python ReinforceRLPolicy.py \\\n')
+            create_policies_files[submit_idx].write('python ReinforceRLPolicy.py \\\n')
         elif algorithm == 'actorcritic':
-            create_policies_file.write('python ActorCriticRLPolicy.py \\\n')
+            create_policies_files[submit_idx].write('python ActorCriticRLPolicy.py \\\n')
         elif algorithm == 'advactorcritic':
-            create_policies_file.write('python AdvantageActorCriticRLPolicy.py \\\n')
+            create_policies_files[submit_idx].write('python AdvantageActorCriticRLPolicy.py \\\n')
 
-        create_policies_file.write('    --model-type=' + model_type + ' \\\n')
-        create_policies_file.write('    --gamma=' + str(gamma) + ' \\\n')
+        create_policies_files[submit_idx].write('    --model-type=' + model_type + ' \\\n')
+        create_policies_files[submit_idx].write('    --gamma=' + str(gamma) + ' \\\n')
         if beam_size is not None:
-            create_policies_file.write('    --candidate-questions-beam-size=' + str(beam_size) + ' \\\n')
+            create_policies_files[submit_idx].write('    --candidate-questions-beam-size=' + str(beam_size) + ' \\\n')
         if guess_predictor:
-            create_policies_file.write('    --separate-guess-predictor \\\n')
+            create_policies_files[submit_idx].write('    --separate-guess-predictor \\\n')
         if on_topic:
-            create_policies_file.write('    --on-topic \\\n')
+            create_policies_files[submit_idx].write('    --on-topic \\\n')
         if algorithm not in ['q', 'q_fixedlen', 'ktdq']:
-            create_policies_file.write('    --alpha=' + str(alpha) + ' \\\n')
-        create_policies_file.write('    --save-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/policy.pkl\n\n')
-        create_policies_file.write('\nlet n++\n')
-        create_policies_file.write('\necho $n \'policies created\'\n\n')
+            create_policies_files[submit_idx].write('    --alpha=' + str(alpha) + ' \\\n')
+        create_policies_files[submit_idx].write(
+            '    --save-file=/scratch/cluster/aish/rl_for_oal/$AGENT_NAME/policy.pkl\n\n')
+        create_policies_files[submit_idx].write('\nlet n++\n')
+        create_policies_files[submit_idx].write('\necho $n \'policies created\'\n\n')
 
         submit_machine_num = script_num % len(submit_machines)
 
         # Condor script to init
         create_condor_script(agent_name + '_init', 'condorized_init_policy_reward.sh', agent_name + ' static '
                              + str(reward))
-        condor_submit_init_file.write('ssh aish@' + submit_machines[submit_machine_num] + ' \'condor_submit ' +
-                                      condor_scripts_dir + agent_name + '_init.sh\'\n')
+        condor_submit_init_files[submit_idx].write('ssh aish@' + submit_machines[submit_machine_num]
+                                                   + ' \'condor_submit ' + condor_scripts_dir + agent_name
+                                                   + '_init.sh\'\n')
 
         # Condor script to train
         if algorithm == 'q_fixedlen':
@@ -138,19 +165,24 @@ def main():
         else:
             create_condor_script(agent_name + '_train', 'condorized_train_policy_reward.sh', agent_name + ' '
                                  + str(reward))
-        condor_submit_train_file.write('ssh aish@' + submit_machines[submit_machine_num] + ' \'condor_submit ' +
-                                       condor_scripts_dir + agent_name + '_train.sh\'\n')
+        condor_submit_train_files[submit_idx].write('ssh aish@' + submit_machines[submit_machine_num]
+                                                    + ' \'condor_submit ' + condor_scripts_dir + agent_name
+                                                    + '_train.sh\'\n')
 
         # Condor script to test
         create_condor_script(agent_name + '_test', 'condorized_test_policy.sh', agent_name)
-        condor_submit_test_file.write('ssh aish@' + submit_machines[submit_machine_num] + ' \'condor_submit ' +
-                                      condor_scripts_dir + agent_name + '_test.sh\'\n')
+        condor_submit_test_files[submit_idx].write('ssh aish@' + submit_machines[submit_machine_num]
+                                                   + ' \'condor_submit ' + condor_scripts_dir + agent_name
+                                                   + '_test.sh\'\n')
 
         script_num += 1
 
-    condor_submit_init_file.close()
-    condor_submit_train_file.close()
-    condor_submit_test_file.close()
+    for idx in range(4):
+        create_policies_files[idx].close()
+        condor_submit_init_files[idx].close()
+        condor_submit_train_files[idx].close()
+        condor_submit_test_files[idx].close()
+        delete_policies_files[idx].close()
 
 
 if __name__ == '__main__':

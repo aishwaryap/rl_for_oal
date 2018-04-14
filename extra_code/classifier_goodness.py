@@ -79,6 +79,8 @@ def main(args):
     output_file = open(args.output_file, 'w')
     output_writer = csv.writer(output_file, delimiter=',')
 
+    all_preds = dict()
+
     for label_name in kappas:
         print 'Analyzing label', label_name, '...'
         classifier_file = os.path.join(agent_dir, 'classifiers/' + label_name + '.pkl')
@@ -100,6 +102,8 @@ def main(args):
         train_metrics = get_f1(classifier, train_features, train_labels, val_labels)
 
         preds = classifier.predict(test_features)
+        all_preds[label_name] = preds
+
         labels = [int(label_name in region_descriptions_dict[region]) for region in test_regions]
         tp = sum([(labels[idx] == 1 and preds[idx] == 1) for idx in range(len(test_regions))])
         tn = sum([(labels[idx] == 0 and preds[idx] == 0) for idx in range(len(test_regions))])
@@ -126,6 +130,25 @@ def main(args):
 
     output_file.close()
 
+    ranks_file = open(args.ranks_file, 'w')
+    ranks_writer = csv.writer(ranks_file, delimiter=',')
+
+    for (region, description) in region_descriptions_dict.items():
+        positive_scores = np.zeros(test_regions)
+        negative_scores = np.zeros(test_regions)
+        for predicate in description:
+            if predicate in all_preds.keys():
+                positive_scores += (all_preds[predicate] == 1) * (1.0 + kappas[predicate])
+                negative_scores += (all_preds[predicate] == 0) * 2.0
+        scores = positive_scores - negative_scores
+        scores = scores.tolist()
+        order = scores.argsort()
+        ranks = order.argsort()
+        region_idx = test_regions.index(region)
+        ranks_writer.writerow(region, ' '.join(description), ranks[region_idx])
+
+    ranks_file.close()
+
 
 if __name__ == '__main__':
     arg_parser = ArgumentParser()
@@ -139,6 +162,8 @@ if __name__ == '__main__':
                             help='Test batch')
     arg_parser.add_argument('--output-file', type=str, default=None,
                             help='File to write output stats')
+    arg_parser.add_argument('--ranks-file', type=str, default=None,
+                            help='File to write ranks')
     arg_parser.add_argument('--regions-batch-size', type=int, default=65536,
                             help='Number of data points per features file')
 
@@ -146,4 +171,5 @@ if __name__ == '__main__':
 
     if args.output_file is None:
         args.output_file = '../logs/classifier_analysis/' + args.agent_name + '.csv'
+        args.output_file = '../logs/classifier_analysis/' + args.agent_name + '_ranks.csv'
     main(args)

@@ -9,6 +9,7 @@ from sklearn.metrics import cohen_kappa_score
 from sklearn.metrics import f1_score
 from sklearn.utils.class_weight import compute_class_weight
 import ast
+import math
 
 from KeyedFileDict import KeyedFileDict
 
@@ -92,19 +93,26 @@ class ClassifiersManager:
             self.train_labels[predicate] += new_labels
             new_train_labels = new_labels
         else:
-            random_nums = np.random.random(size=len(new_labels))
-            # print 'random_nums =', random_nums
-            # print 'new_labels =', new_labels
-            # print 'enumerate(new_labels) =', enumerate(new_labels)
-            new_train_labels = [label for (idx, label) in enumerate(new_labels)
-                                if random_nums[idx] > self.val_label_fraction]
-            new_val_labels = [label for (idx, label) in enumerate(new_labels)
-                              if random_nums[idx] <= self.val_label_fraction]
+            new_positive_labels = [(region, label) for (region, label) in new_labels]
+            new_negative_labels = [(region, label) for (region, label) in new_labels]
+            np.random.shuffle(new_positive_labels)
+            np.random.shuffle(new_negative_labels)
+            num_positive_val_labels = int(math.floor(self.val_label_fraction * len(new_positive_labels)))
+            num_negative_val_labels = int(math.floor(self.val_label_fraction * len(new_negative_labels)))
+
+            new_val_labels = new_positive_labels[:num_positive_val_labels] \
+                             + new_negative_labels[:num_negative_val_labels]
+            new_train_labels = new_positive_labels[num_positive_val_labels:] \
+                               + new_negative_labels[num_negative_val_labels:]
+            np.random.shuffle(new_train_labels)
+            np.random.shuffle(new_val_labels)
+
             self.train_labels[predicate] += new_train_labels
-            if predicate not in self.val_labels.keys():
-                self.val_labels[predicate] = new_val_labels
-            else:
-                self.val_labels[predicate] += new_val_labels
+            if len(new_val_labels) > 0:
+                if predicate not in self.val_labels.keys():
+                    self.val_labels[predicate] = new_val_labels
+                else:
+                    self.val_labels[predicate] += new_val_labels
 
         if len(new_train_labels) > 0:
             # print 'predicate =', predicate
@@ -150,13 +158,19 @@ class ClassifiersManager:
             if len(regions) != len(labels):
                 raise RuntimeError('len(regions) = ' + str(len(regions)) + ', len(labels) = ' + str(len(labels)))
             if len(set(labels)) == 2:
-                features = []
-                for region in regions:
+                features = list()
+                labels_to_use = list()
+                for (idx, region) in enumerate(regions):
                     if region in self.active_train_feature_dict.keys():
                         feature = self.active_train_feature_dict[region]
-                    else:
+                        features += [feature]
+                        labels_to_use.append(labels[idx])
+                    elif region in self.active_test_feature_dict.keys():
                         feature = self.active_test_feature_dict[region]
-                    features += feature
+                        features += [feature]
+                        labels_to_use.append(labels[idx])
+                if len(features) == 0:
+                    return
                 features = np.array(features)
                 if len(features.shape) == 1:
                     features = features.reshape(1, -1)
@@ -164,7 +178,7 @@ class ClassifiersManager:
 
                 # Compute Kappa and normalize to 0-1
                 # kappa = (cohen_kappa_score(labels, preds, labels=[0, 1]) + 1.0) / 2.0
-                kappa = f1_score(labels, preds)
+                kappa = f1_score(labels_to_use, preds)
                 # print 'In compute_val_set_kappa, labels = ', labels, ', preds =', preds, ', kappa =', kappa,
                 # print 'press enter'
                 # x = raw_input()
@@ -176,33 +190,39 @@ class ClassifiersManager:
             regions = [region for (region, label) in self.train_labels[predicate]]
             labels = [label for (region, label) in self.train_labels[predicate]]
             if len(set(labels)) == 2:
-                features = []
-                for region in regions:
+                features = list()
+                labels_to_use = list()
+                for (idx, region) in enumerate(regions):
                     if region in self.active_train_feature_dict.keys():
                         feature = self.active_train_feature_dict[region]
-                    else:
+                        features += [feature]
+                        labels_to_use.append(labels[idx])
+                    elif region in self.active_test_feature_dict.keys():
                         feature = self.active_test_feature_dict[region]
-                    features += [feature]
+                        features += [feature]
+                        labels_to_use.append(labels[idx])
+                if len(features) == 0:
+                    return
                 features = np.array(features)
                 if len(features.shape) == 1:
                     features = features.reshape(1, -1)
 
                 preds = list()
-                for idx in range(len(labels)):
+                for idx in range(len(labels_to_use)):
                     # classifier = self.get_initial_classifier()
                     classifier = SGDClassifier(loss='hinge', class_weight='balanced')
                     train_features = np.vstack((features[:idx, :], features[idx+1:, :]))
-                    train_labels = np.array(labels[:idx] + labels[idx+1:])
+                    train_labels = np.array(labels_to_use[:idx] + labels_to_use[idx+1:])
                     if np.unique(train_labels).shape[0] == 2:
                         classifier.fit(train_features, train_labels)
                         pred = classifier.predict(features[idx, :].reshape(1, -1)).tolist()[0]
                         preds.append(pred)
                     else:
-                        preds.append(labels[idx])
+                        preds.append(labels_to_use[idx])
 
                 # Compute Kappa and normalize to 0-1
                 # kappa = (cohen_kappa_score(labels, preds, labels=[0, 1]) + 1.0) / 2.0
-                kappa = f1_score(labels, preds)
+                kappa = f1_score(labels_to_use, preds)
                 # print 'In compute_crossval_kappa, labels = ', labels, ', preds =', preds, ', kappa =', kappa,
                 # print 'press enter'
                 # x = raw_input()

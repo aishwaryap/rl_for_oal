@@ -9,18 +9,25 @@ import operator
 
 
 def main(args):
-    with open(args.submit_file) as handle:
-        lines = handle.read().strip().split('\n')
-        if args.script_type == 'test':
-            agent_names = [re.sub('.sh\'', '', line.split()[3].split('/')[-1].strip()) for line in lines]
-        else:
-            agent_names = [re.sub('_' + args.script_type + '.sh\'', '', line.split()[3].split('/')[-1].strip())
-                           for line in lines]
+    if args.submit_file is not None:
+        with open(args.submit_file) as handle:
+            lines = handle.read().strip().split('\n')
+            if args.script_type == 'test':
+                agent_names = [re.sub('.sh\'', '', line.split()[3].split('/')[-1].strip()) for line in lines]
+            else:
+                agent_names = [re.sub('_' + args.script_type + '.sh\'', '', line.split()[3].split('/')[-1].strip())
+                               for line in lines]
+    elif args.agent_list_file is not None:
+        with open(args.agent_list_file) as handle:
+            agent_names = handle.read().split('\n')
+    else:
+        print 'No agent list provided'
+        return
 
     if args.script_type == 'test':
-        baselines = ['static_test']
+        baselines = ['static_test', 'static2_test']
     else:
-        baselines = ['static']
+        baselines = ['static', 'static2']
     agent_names = agent_names + baselines
 
     all_avg_success = dict()
@@ -105,7 +112,7 @@ def main(args):
 
     for baseline in baselines:
         if baseline not in all_avg_success:
-            break
+            continue
         better = list()
         trending_better = list()
         for agent_name in final_batches:
@@ -150,7 +157,9 @@ if __name__ == '__main__':
     arg_parser.add_argument('--script-type', type=str, default='test',
                             help='Path to where agent directories are')
     arg_parser.add_argument('--submit-file', type=str, default=None,
-                            help='List of test scripts that finished')
+                            help='Condor submit file')
+    arg_parser.add_argument('--agent-list-file', type=str, default=None,
+                            help='List of agents')
     arg_parser.add_argument('--success-file', type=str, default=None,
                             help='File to write avg success stats')
     arg_parser.add_argument('--len-file', type=str, default=None,
@@ -169,8 +178,8 @@ if __name__ == '__main__':
 
     args = arg_parser.parse_args()
 
-    if args.submit_file is None:
-        args.submit_file = '../scripts/condor_submit_' + args.script_type + '_new.sh'
+    if args.agent_list_file is None and args.submit_file is None:
+        args.submit_file = '../scripts/condor_submit_' + args.script_type + '3.sh'
     if args.success_file is None:
         args.success_file = '../logs/success_' + args.script_type + '.csv'
     if args.len_file is None:

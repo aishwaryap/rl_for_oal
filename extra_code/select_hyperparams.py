@@ -105,8 +105,8 @@ def create_submit_files():
                       ['roadkill', 'streetpizza']
 
     condor_scripts_dir = '/scratch/cluster/aish/rl_for_oal/condor/scripts/'
-    condor_submit_train_file =  open('../scripts/condor_submit_train_new.sh', 'w')
-    condor_submit_test_file = open('../scripts/condor_submit_test_new.sh', 'w')
+    condor_submit_train_file =  open('../scripts/condor_submit_train_selected.sh', 'w')
+    condor_submit_test_file = open('../scripts/condor_submit_test_selected.sh', 'w')
 
     script_num = 0
     for agent_name in agent_names:
@@ -124,4 +124,4 @@ def create_submit_files():
 if __name__ == '__main__':
     consolidate_batches_and_p_values()
     find_worst_and_best()
-    # create_submit_files()
+    create_submit_files()
