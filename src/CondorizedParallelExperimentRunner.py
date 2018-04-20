@@ -107,6 +107,8 @@ class CondorizedParallelExperimentRunner:
         classifier_updates = [dialog_stats['classifier_updates'] for dialog_stats in dialog_stats_list
                               if 'classifier_updates' in dialog_stats]
 
+        positive_fraction = 0.5
+
         successful_policy_updates = [dialog_stats['policy_updates'] for dialog_stats in dialog_stats_list
                                      if 'policy_updates' in dialog_stats and dialog_stats['success'] == 1]
 
@@ -124,12 +126,27 @@ class CondorizedParallelExperimentRunner:
         # Experience replay
         self.successful_policy_updates += successful_policy_updates_flat
         self.failed_policy_updates += failed_policy_updates_flat
+
+        # Importance sampling weights
+        successful_is_weight = positive_fraction * \
+                               (float(len(self.successful_policy_updates))
+                                / (len(self.successful_policy_updates) + len(self.failed_policy_updates)))
+        failed_is_weight = (1.0 - positive_fraction) * \
+                           (float(len(self.failed_policy_updates))
+                            / (len(self.successful_policy_updates) + len(self.failed_policy_updates)))
+
         num_updates = 20 * len(dialog_stats_list)
-        positive_fraction = 0.5
         num_positive_updates = int(num_updates * positive_fraction)
         num_negative_updates = int(num_updates * (1.0 - positive_fraction))
         successful_list_indices = np.random.permutation(len(self.successful_policy_updates))[:num_positive_updates]
         failed_list_indices = np.random.permutation(len(self.failed_policy_updates))[:num_negative_updates]
+
+        selected_successful_policy_updates = [self.successful_policy_updates[idx] for idx in successful_list_indices]
+        selected_failed_policy_updates = [self.failed_policy_updates[idx] for idx in failed_list_indices]
+        for update in selected_successful_policy_updates:
+            update['is_weight'] = successful_is_weight
+        for update in selected_failed_policy_updates:
+            update['is_weight'] = failed_is_weight
 
         policy_updates = successful_policy_updates_flat + failed_policy_updates_flat + \
                          [self.successful_policy_updates[idx] for idx in successful_list_indices] + \
@@ -154,6 +171,12 @@ class CondorizedParallelExperimentRunner:
             agent.perform_classifier_updates(classifier_updates)
         if len(policy_updates) > 0:
             agent.perform_policy_updates(policy_updates)
+
+        for update in selected_successful_policy_updates:
+            del update['is_weight']
+        for update in selected_failed_policy_updates:
+            del update['is_weight']
+
         agent.save(agent_file)
         dialog_stats_file = open(self.dialog_stats_filename, 'a+')
         dialog_stats_writer = csv.writer(dialog_stats_file, delimiter=',')

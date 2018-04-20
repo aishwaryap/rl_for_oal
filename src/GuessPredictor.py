@@ -181,7 +181,12 @@ class GuessPredictor:
         if len(feature_vectors.shape) == 1:
             feature_vectors = feature_vectors.reshape(1, -1)
         target_values = np.array([update['guess_predictor_target'] for update in updates])
-        self.predictor.partial_fit(feature_vectors, target_values)
+
+        if 'is_weight' in updates[0]:
+            sample_weights = [update['is_weight'] for update in updates]
+            self.predictor.partial_fit(feature_vectors, target_values, sample_weight=sample_weights)
+        else:
+            self.predictor.partial_fit(feature_vectors, target_values)
         self.fitted = True
 
     def get_guess_success_prob(self, dialog_state):

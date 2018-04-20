@@ -183,7 +183,11 @@ class ParallelRLPolicy(AbstractPolicy):
             target_q_values = np.array([update['target'] for update in updates])
             if len(feature_vectors.shape) == 1:
                 feature_vectors = feature_vectors.reshape(1, -1)
-            self.q.partial_fit(feature_vectors, target_q_values)
+            if 'is_weight' in updates[0]:
+                sample_weights = [update['is_weight'] for update in updates]
+                self.q.partial_fit(feature_vectors, target_q_values, sample_weight=sample_weights)
+            else:
+                self.q.partial_fit(feature_vectors, target_q_values)
             if self.separate_guess_predictor:
                 self.guess_predictor.perform_updates(updates)
             self.untrained = False

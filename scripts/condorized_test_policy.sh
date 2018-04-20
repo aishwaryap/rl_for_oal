@@ -4,7 +4,7 @@ TEST_DIR=$AGENT_NAME"_test"
 ./remove_agent_dirs.sh $TEST_DIR
 ./create_agent_dirs.sh $TEST_DIR
 
-./initialize_classifiers.sh $AGENT_NAME
+# ./initialize_classifiers.sh $AGENT_NAME
 
 cd ../src
 

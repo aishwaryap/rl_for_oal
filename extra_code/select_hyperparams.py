@@ -123,5 +123,5 @@ def create_submit_files():
 
 if __name__ == '__main__':
     consolidate_batches_and_p_values()
-    find_worst_and_best()
-    create_submit_files()
+    # find_worst_and_best()
+    # create_submit_files()

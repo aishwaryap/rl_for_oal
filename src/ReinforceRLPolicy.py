@@ -84,7 +84,7 @@ class ReinforceRLPolicy(ParallelRLPolicy):
             # print '(update['r'] - R) =', (update['r'] - R)
             # print '(1.0 / t + 1) = ', (1.0 / t + 1)
             # print '(1.0 / t + 1) * (update['r'] - R) =', (1.0 / t + 1) * (update['r'] - R)
-            R += (1.0 / (t + 1)) * (update['r'] - R)
+            R += (1.0 / (t + 1)) * update['is_weight'] * (update['r'] - R)
             # print 'After update R =', R
             t += 1
             if update['episode_end']:

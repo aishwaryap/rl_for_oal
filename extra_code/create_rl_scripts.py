@@ -12,7 +12,7 @@ condor_out_dir = '/scratch/cluster/aish/rl_for_oal/condor/out/'
 
 
 def get_agent_name(algorithm, model_type, gamma, beam_size, guess_predictor, on_topic, reward, alpha):
-    agent_name = 'per_' + algorithm + '_' + model_type + '_gamma' + re.sub('\.', '_', str(gamma)) \
+    agent_name = 'per_is_' + algorithm + '_' + model_type + '_gamma' + re.sub('\.', '_', str(gamma)) \
                  + '_reward' + re.sub('\.', '_', str(reward)) + '_alpha' + re.sub('\.', '_', str(alpha))
     if beam_size is not None:
         agent_name = agent_name + '_beam' + str(beam_size)
@@ -152,7 +152,7 @@ def main():
         submit_machine_num = script_num % len(submit_machines)
 
         # Condor script to init
-        create_condor_script(agent_name + '_init', 'condorized_init_policy_reward.sh', agent_name + ' static '
+        create_condor_script(agent_name + '_init', 'condorized_init_policy_reward_short.sh', agent_name + ' static '
                              + str(reward))
         condor_submit_init_files[submit_idx].write('ssh aish@' + submit_machines[submit_machine_num]
                                                    + ' \'condor_submit ' + condor_scripts_dir + agent_name
@@ -163,7 +163,7 @@ def main():
             create_condor_script(agent_name + '_train', 'condorized_train_policy_fixedlen.sh', agent_name + ' '
                                  + str(reward))
         else:
-            create_condor_script(agent_name + '_train', 'condorized_train_policy_reward.sh', agent_name + ' '
+            create_condor_script(agent_name + '_train', 'condorized_train_policy_reward_short.sh', agent_name + ' '
                                  + str(reward))
         condor_submit_train_files[submit_idx].write('ssh aish@' + submit_machines[submit_machine_num]
                                                     + ' \'condor_submit ' + condor_scripts_dir + agent_name

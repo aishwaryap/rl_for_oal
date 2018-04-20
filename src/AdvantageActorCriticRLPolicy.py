@@ -102,7 +102,7 @@ class AdvantageActorCriticRLPolicy(ParallelRLPolicy):
     def perform_updates(self, updates):
         super(AdvantageActorCriticRLPolicy, self).perform_updates(updates)
         for update in updates:
-            self.policy_weights = self.policy_weights + self.alpha * update['z'] * update['td_error']
+            self.policy_weights = self.policy_weights + update['is_weight'] * self.alpha * update['z'] * update['td_error']
 
 
 if __name__ == '__main__':
