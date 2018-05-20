@@ -91,7 +91,9 @@ class CondorizedParallelExperimentRunner:
         cur_time = datetime.now()
         print 'Reading region descriptions: ', str(cur_time - prev_time)
 
-        self.dialog_stats_header = ['agent_name', 'num_train_regions', 'num_test_regions', 'success', 'num_system_turns']
+        self.dialog_stats_header = ['agent_name', 'num_train_regions', 'num_test_regions', 'success',
+                                    'num_system_turns', 'num_label_queries', 'num_example_queries',
+                                    'num_ontopic_queries', 'num_opportunistic_queries']
         self.dialog_stats_filename = dialog_stats_filename
         self.dialog_stats_queue = Queue()
 
@@ -128,29 +130,45 @@ class CondorizedParallelExperimentRunner:
         self.failed_policy_updates += failed_policy_updates_flat
 
         # Importance sampling weights
-        successful_is_weight = positive_fraction * \
-                               (float(len(self.successful_policy_updates))
+        if len(self.successful_policy_updates) + len(self.failed_policy_updates) > 0:
+            successful_is_weight = positive_fraction * \
+                                   (float(len(self.successful_policy_updates))
+                                    / (len(self.successful_policy_updates) + len(self.failed_policy_updates)))
+            failed_is_weight = (1.0 - positive_fraction) * \
+                               (float(len(self.failed_policy_updates))
                                 / (len(self.successful_policy_updates) + len(self.failed_policy_updates)))
-        failed_is_weight = (1.0 - positive_fraction) * \
-                           (float(len(self.failed_policy_updates))
-                            / (len(self.successful_policy_updates) + len(self.failed_policy_updates)))
+        else:
+            successful_is_weight = 1.0
+            failed_is_weight = 1.0
 
-        num_updates = 20 * len(dialog_stats_list)
-        num_positive_updates = int(num_updates * positive_fraction)
-        num_negative_updates = int(num_updates * (1.0 - positive_fraction))
-        successful_list_indices = np.random.permutation(len(self.successful_policy_updates))[:num_positive_updates]
-        failed_list_indices = np.random.permutation(len(self.failed_policy_updates))[:num_negative_updates]
+        # num_updates = 20 * len(dialog_stats_list)
+        num_updates = 0
+        if num_updates > 0:
+            num_positive_updates = int(num_updates * positive_fraction)
+            num_negative_updates = int(num_updates * (1.0 - positive_fraction))
+            successful_list_indices = np.random.permutation(len(self.successful_policy_updates))[:num_positive_updates]
+            failed_list_indices = np.random.permutation(len(self.failed_policy_updates))[:num_negative_updates]
 
-        selected_successful_policy_updates = [self.successful_policy_updates[idx] for idx in successful_list_indices]
-        selected_failed_policy_updates = [self.failed_policy_updates[idx] for idx in failed_list_indices]
-        for update in selected_successful_policy_updates:
-            update['is_weight'] = successful_is_weight
-        for update in selected_failed_policy_updates:
-            update['is_weight'] = failed_is_weight
+            selected_successful_policy_updates = [self.successful_policy_updates[idx] for idx in successful_list_indices]
+            selected_failed_policy_updates = [self.failed_policy_updates[idx] for idx in failed_list_indices]
+            for update in selected_successful_policy_updates:
+                update['is_weight'] = successful_is_weight
+            for update in selected_failed_policy_updates:
+                update['is_weight'] = failed_is_weight
+            for update in successful_policy_updates_flat:
+                update['is_weight'] = 1.0
+            for update in failed_policy_updates_flat:
+                update['is_weight'] = 1.0
+        else:
+            selected_successful_policy_updates = []
+            selected_failed_policy_updates = []
 
-        policy_updates = successful_policy_updates_flat + failed_policy_updates_flat + \
-                         [self.successful_policy_updates[idx] for idx in successful_list_indices] + \
-                         [self.failed_policy_updates[idx] for idx in failed_list_indices]
+        new_updates_replication_frequency = 10
+        new_updates = (successful_policy_updates_flat + failed_policy_updates_flat) * new_updates_replication_frequency
+        list_indices = np.random.permutation(len(new_updates))
+        new_updates = [new_updates[idx] for idx in list_indices]
+
+        policy_updates = new_updates + selected_successful_policy_updates + selected_failed_policy_updates
 
         if self.all_features_file is not None:
             with open(self.all_features_file, 'a+') as handle:
@@ -176,6 +194,12 @@ class CondorizedParallelExperimentRunner:
             del update['is_weight']
         for update in selected_failed_policy_updates:
             del update['is_weight']
+        for update in successful_policy_updates_flat:
+            if 'is_weight' in update:
+                del update['is_weight']
+        for update in failed_policy_updates_flat:
+            if 'is_weight' in update:
+                del update['is_weight']
 
         agent.save(agent_file)
         dialog_stats_file = open(self.dialog_stats_filename, 'a+')

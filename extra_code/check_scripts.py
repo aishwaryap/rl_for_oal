@@ -74,7 +74,8 @@ def main(args):
     other_error_types_file = open(args.other_error_types_file, 'w')
 
     scripts = os.listdir(condor_scripts_dir)
-    required_scripts = [f for f in scripts if f.endswith('_' + args.script_type + '.sh')]
+    required_scripts = [f for f in scripts if f.endswith('_' + args.script_type + '.sh')
+                        and f.startswith(args.script_prefix)]
 
     resubmit_file = open(args.resubmit_file, 'w')
     completed_file = open(args.completed_file, 'w')
@@ -138,6 +139,8 @@ if __name__ == '__main__':
     arg_parser.add_argument('--agent-path', type=str, default='/scratch/cluster/aish/rl_for_oal/',
                             help='Path to agent dirs')
 
+    arg_parser.add_argument('--script-prefix', type=str, default='',
+                            help='Check only scripts starting with this prefix')
     arg_parser.add_argument('--script-type', type=str, required=True,
                             help='One of init, train, test')
     arg_parser.add_argument('--num-stats-expected', type=int, default=1000,

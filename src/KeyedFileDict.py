@@ -38,7 +38,7 @@ class KeyedFileDict:
             # x = raw_input()
 
             possible_backoff_times = [0, 0.01]
-            max_trials = 1000
+            max_trials = 100
             num_trials = 0
 
             while num_trials < max_trials:

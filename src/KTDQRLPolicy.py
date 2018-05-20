@@ -23,11 +23,12 @@ __author__ = 'aishwarya'
 class KTDQRLPolicy(ParallelRLPolicy):
     def __init__(self, save_file, on_topic, classifier_manager, separate_guess_predictor, candidate_questions_beam_size,
                  min_prob_weight, max_prob_weight, max_prob_kappa, initial_guess_predictor, ablate_feature,
-                 init_theta_std_dev, lambda_, eta, P_n, kappa, gamma, cleaning_epsilon, alpha, beta):
+                 init_theta_std_dev, lambda_, eta, P_n, kappa, gamma, cleaning_epsilon, alpha, beta,
+                 ablate_feature_group):
         super(KTDQRLPolicy, self).__init__(save_file, on_topic, classifier_manager, 'linear',
                                            separate_guess_predictor, gamma, candidate_questions_beam_size,
                                            min_prob_weight, max_prob_weight, max_prob_kappa, initial_guess_predictor,
-                                           ablate_feature)
+                                           ablate_feature, ablate_feature_group)
         if separate_guess_predictor:
             if ablate_feature is None:
                 self.n = 13
@@ -182,6 +183,8 @@ if __name__ == '__main__':
                             help='Kappa at which distribution peaks')
     arg_parser.add_argument('--ablate-feature', type=int, default=None,
                             help='Ablate this feature idx')
+    arg_parser.add_argument('--ablate-feature-group', type=str, default=None,
+                            help='query or guess')
     arg_parser.add_argument('--save-file', type=str, required=True,
                             help='File to save pickled policy')
 
@@ -214,5 +217,5 @@ if __name__ == '__main__':
                           args.candidate_questions_beam_size, args.min_prob_weight, args.max_prob_weight,
                           args.max_prob_kappa, initial_guess_predictor, args.ablate_feature, args.init_theta_std_dev,
                           args.lambda_, args.eta, args.P_n, args.kappa, args.gamma, args.cleaning_epsilon,
-                          args.alpha, args.beta)
+                          args.alpha, args.beta, args.ablate_feature_group)
     policy.save()

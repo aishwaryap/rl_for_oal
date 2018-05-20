@@ -16,13 +16,16 @@ class ParallelRLPolicy(AbstractPolicy):
     # This should have the same classifier manager as the dialog agent
     def __init__(self, save_file, on_topic, classifier_manager, model_type, separate_guess_predictor, gamma,
                  candidate_questions_beam_size, min_prob_weight, max_prob_weight, max_prob_kappa,
-                 initial_guess_predictor=None, ablate_feature=None):
+                 initial_guess_predictor=None, ablate_feature=None, ablate_feature_group=None):
         super(ParallelRLPolicy, self).__init__(save_file, on_topic, classifier_manager, min_prob_weight,
                                                max_prob_weight, max_prob_kappa)
 
         self.gamma = gamma
         self.candidate_questions_beam_size = candidate_questions_beam_size
         self.ablate_feature = ablate_feature
+        self.ablate_feature_group = ablate_feature_group
+
+        self.model_type = model_type
 
         if model_type == 'mlp':
             self.q = MLPRegressor()
@@ -46,6 +49,7 @@ class ParallelRLPolicy(AbstractPolicy):
             [
                 'Evaluating score of make_guess (0-1)',
                 'Evaluating score of ask_positive_example (0-1)',
+                'Evaluating score of ask_label (0-1)',
                 'Question is on-topic (0-1)',
                 'Predicate has a classifier (0-1)',
                 'Margin of object',
@@ -53,8 +57,8 @@ class ParallelRLPolicy(AbstractPolicy):
                 'Fraction of k nearest neighbours of the object which are unlabelled',
                 'Prev kappa of classifier of predicate',
                 'Frequency of use of the predicate - normalized',
-                'Number of system turns used - normalized',
-                'Fraction of previous dialogs using this predicate that have succeeded'
+                'Fraction of previous dialogs using this predicate that have succeeded',
+                'Number of system turns used - normalized'
             ]
 
         # Cache best action for next state
@@ -63,12 +67,13 @@ class ParallelRLPolicy(AbstractPolicy):
     def get_features(self, dialog_state, action):
         feature_vector = list()
 
-        if self.separate_guess_predictor:
-            # Guess success prob
-            feature_vector.append(self.guess_predictor.get_guess_success_prob(dialog_state))
-        else:
-            # Get guess features
-            feature_vector = feature_vector + self.guess_predictor.get_features(dialog_state)
+        if self.ablate_feature_group != 'guess':
+            if self.separate_guess_predictor:
+                # Guess success prob
+                feature_vector.append(self.guess_predictor.get_guess_success_prob(dialog_state))
+            else:
+                # Get guess features
+                feature_vector = feature_vector + self.guess_predictor.get_features(dialog_state)
 
         # Evaluating score of make_guess (0-1)
         feature_vector.append(float(action['action'] == 'make_guess'))
@@ -82,61 +87,62 @@ class ParallelRLPolicy(AbstractPolicy):
         # Question is on-topic (0-1)
         feature_vector.append(float(self.on_topic))
 
-        # Predicate has a classifier (0-1)
-        if 'predicate' in action:
-            feature_vector.append(float(action['predicate'] in dialog_state['predicates_without_classifiers']))
-        else:
-            feature_vector.append(1.0)
+        if self.ablate_feature_group != 'query':
+            # Predicate has a classifier (0-1)
+            if 'predicate' in action:
+                feature_vector.append(float(action['predicate'] in dialog_state['predicates_without_classifiers']))
+            else:
+                feature_vector.append(1.0)
 
-        # Margin of object
-        if 'region' in action:
-            data_point = np.array([dialog_state['active_train_regions_features'][action['region']]])
-            feature_vector.append(self.classifier_manager.get_margins(action['predicate'], data_point)[0])
-        else:
-            feature_vector.append(1.0)
+            # Margin of object
+            if 'region' in action:
+                data_point = np.array([dialog_state['active_train_regions_features'][action['region']]])
+                feature_vector.append(self.classifier_manager.get_margins(action['predicate'], data_point)[0])
+            else:
+                feature_vector.append(1.0)
 
-        # Density of object
-        if 'region' in action:
-            feature_vector.append(dialog_state['active_train_regions_densities'][action['region']])
-        else:
-            feature_vector.append(1.0)
+            # Density of object
+            if 'region' in action:
+                feature_vector.append(dialog_state['active_train_regions_densities'][action['region']])
+            else:
+                feature_vector.append(1.0)
 
-        # Fraction of k nearest neighbours of the object which are unlabelled
-        if 'region' in action:
-            # print "dialog_state['labels_acquired'] =", dialog_state['labels_acquired']
-            nbrs = [nbr for (nbr, sim) in dialog_state['active_train_regions_nbrs'][action['region']]]
-            labelled_regions = [region for (region, label_value) in dialog_state['labels_acquired'].items()]
-            labelled_nbrs = [region for region in nbrs if region in labelled_regions]
-            feature_vector.append(len(labelled_nbrs) / float(len(nbrs)))
-        else:
-            feature_vector.append(0.0)
+            # Fraction of k nearest neighbours of the object which are unlabelled
+            if 'region' in action:
+                # print "dialog_state['labels_acquired'] =", dialog_state['labels_acquired']
+                nbrs = [nbr for (nbr, sim) in dialog_state['active_train_regions_nbrs'][action['region']]]
+                labelled_regions = [region for (region, label_value) in dialog_state['labels_acquired'].items()]
+                labelled_nbrs = [region for region in nbrs if region in labelled_regions]
+                feature_vector.append(len(labelled_nbrs) / float(len(nbrs)))
+            else:
+                feature_vector.append(0.0)
 
-        # Prev kappa of classifier of predicate
-        if 'predicate' in action:
-            feature_vector.append(self.classifier_manager.get_kappa(action['predicate']))
-        else:
-            feature_vector.append(0.0)
+            # Prev kappa of classifier of predicate
+            if 'predicate' in action:
+                feature_vector.append(self.classifier_manager.get_kappa(action['predicate']))
+            else:
+                feature_vector.append(0.0)
 
-        # Frequency of use of the predicate - normalized
-        if 'predicate' in action and action['predicate'] in dialog_state['predicate_uses']:
-            feature_vector.append(dialog_state['predicate_uses'][action['predicate']] /
-                                  float(dialog_state['num_dialogs_completed']))
-        else:
-            feature_vector.append(1.0)
+            # Frequency of use of the predicate - normalized
+            if 'predicate' in action and action['predicate'] in dialog_state['predicate_uses']:
+                feature_vector.append(dialog_state['predicate_uses'][action['predicate']] /
+                                      float(dialog_state['num_dialogs_completed']))
+            else:
+                feature_vector.append(1.0)
+
+            # Fraction of uses of predicate that resulted in successful dialogs
+            if 'predicate' in action and action['predicate'] in dialog_state['predicate_successes'] \
+                    and action['predicate'] in dialog_state['predicate_uses']:
+                feature_vector.append(dialog_state['predicate_successes'][action['predicate']] /
+                                      float(dialog_state['predicate_uses'][action['predicate']]))
+            else:
+                feature_vector.append(1.0)
 
         # Number of system turns used - normalized
         feature_vector.append(dialog_state['num_system_turns'] / 15.0)
 
-        # Fraction of uses of predicate that resulted in successful dialogs
-        if 'predicate' in action and action['predicate'] in dialog_state['predicate_successes'] \
-                and action['predicate'] in dialog_state['predicate_uses']:
-            feature_vector.append(dialog_state['predicate_successes'][action['predicate']] /
-                                  float(dialog_state['predicate_uses'][action['predicate']]))
-        else:
-            feature_vector.append(1.0)
-
         if self.ablate_feature is not None:
-            feature_vector.remove(self.ablate_feature)
+            feature_vector = feature_vector[:self.ablate_feature] + feature_vector[self.ablate_feature + 1:]
 
         return feature_vector
 
@@ -183,7 +189,7 @@ class ParallelRLPolicy(AbstractPolicy):
             target_q_values = np.array([update['target'] for update in updates])
             if len(feature_vectors.shape) == 1:
                 feature_vectors = feature_vectors.reshape(1, -1)
-            if 'is_weight' in updates[0]:
+            if self.model_type == 'linear' and 'is_weight' in updates[0]:
                 sample_weights = [update['is_weight'] for update in updates]
                 self.q.partial_fit(feature_vectors, target_q_values, sample_weight=sample_weights)
             else:
@@ -230,6 +236,8 @@ if __name__ == '__main__':
                             help='Kappa at which distribution peaks')
     arg_parser.add_argument('--ablate-feature', type=int, default=None,
                             help='Ablate this feature idx')
+    arg_parser.add_argument('--ablate-feature-group', type=str, default=None,
+                            help='query or guess')
     arg_parser.add_argument('--save-file', type=str, required=True,
                             help='File to save pickled policy')
 
@@ -243,5 +251,5 @@ if __name__ == '__main__':
     policy = ParallelRLPolicy(args.save_file, args.on_topic, None, args.model_type, args.separate_guess_predictor,
                               args.gamma, args.candidate_questions_beam_size, args.min_prob_weight,
                               args.max_prob_weight, args.max_prob_kappa, initial_guess_predictor,
-                              args.ablate_feature)
+                              args.ablate_feature, args.ablate_feature_group)
     policy.save()

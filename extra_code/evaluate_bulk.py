@@ -25,9 +25,9 @@ def main(args):
         return
 
     if args.script_type == 'test':
-        baselines = ['static_test', 'static2_test']
+        baselines = ['static_test', 'static2_test', 'static_ontopic_test']
     else:
-        baselines = ['static', 'static2']
+        baselines = ['static', 'static2', 'static_ontopic']
     agent_names = agent_names + baselines
 
     all_avg_success = dict()

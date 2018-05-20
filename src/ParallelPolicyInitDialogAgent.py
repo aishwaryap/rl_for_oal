@@ -17,10 +17,12 @@ from AdvantageActorCriticRLPolicy import AdvantageActorCriticRLPolicy
 
 class ParallelPolicyInitDialogAgent(ParallelDialogAgent):
     def __init__(self, agent_name, classifier_manager, source_policy, target_policy, seen_predicates_file,
-                 predicates_with_classifiers_file, per_turn_reward, success_reward, failure_reward, max_turns):
+                 predicates_with_classifiers_file, per_turn_reward, example_query_reward, success_reward,
+                 failure_reward, max_turns):
         super(ParallelPolicyInitDialogAgent, self).__init__(agent_name, classifier_manager, source_policy,
                                                             seen_predicates_file, predicates_with_classifiers_file,
-                                                            per_turn_reward, success_reward, failure_reward, max_turns)
+                                                            per_turn_reward, example_query_reward, success_reward,
+                                                            failure_reward, max_turns)
 
         self.source_policy = source_policy
         self.target_policy = target_policy
@@ -46,6 +48,10 @@ class ParallelPolicyInitDialogAgent(ParallelDialogAgent):
         dialog_stats['num_train_regions'] = len(active_train_regions)
         dialog_stats['predicates'] = copy.deepcopy(self.current_predicates)
         dialog_stats['policy_updates'] = list()
+        dialog_stats['num_label_queries'] = 0
+        dialog_stats['num_example_queries'] = 0
+        dialog_stats['num_ontopic_queries'] = 0
+        dialog_stats['num_opportunistic_queries'] = 0
 
         while not dialog_complete:
             # print 'Starting turn', self.num_system_turns + 1
@@ -69,9 +75,20 @@ class ParallelPolicyInitDialogAgent(ParallelDialogAgent):
 
             elif next_action['action'] == 'ask_positive_example':
                 self.ask_positive_example(next_action['predicate'])
+                reward = self.example_query_reward
+                dialog_stats['num_example_queries'] += 1
+                if next_action['predicate'] in self.current_predicates:
+                    dialog_stats['num_ontopic_queries'] += 1
+                else:
+                    dialog_stats['num_opportunistic_queries'] += 1
 
             elif next_action['action'] == 'ask_label':
                 self.ask_label(next_action['predicate'], next_action['region'])
+                dialog_stats['num_label_queries'] += 1
+                if next_action['predicate'] in self.current_predicates:
+                    dialog_stats['num_ontopic_queries'] += 1
+                else:
+                    dialog_stats['num_opportunistic_queries'] += 1
 
             else:
                 raise RuntimeError('Invalid action :' + str(next_action['action']))
@@ -148,6 +165,8 @@ if __name__ == '__main__':
 
     arg_parser.add_argument('--per-turn-reward', type=float, default=-1,
                             help='Reward for non-terminating turns')
+    arg_parser.add_argument('--example-query-reward', type=float, default=-1,
+                            help='Reward for example queries')
     arg_parser.add_argument('--success-reward', type=float, default=100,
                             help='Reward for successful dialog')
     arg_parser.add_argument('--failure-reward', type=float, default=-100,
@@ -167,6 +186,7 @@ if __name__ == '__main__':
     # Logfile is None because otherwise writing to logs becomes a bottleneck
     dialog_agent = ParallelPolicyInitDialogAgent(args.agent_name, None, source_policy, target_policy,
                                                  args.seen_predicates_file, args.predicates_with_classifiers_file,
-                                                 args.per_turn_reward, args.success_reward, args.failure_reward,
+                                                 args.per_turn_reward, args.example_query_reward,
+                                                 args.success_reward, args.failure_reward,
                                                  args.max_turns)
     dialog_agent.save(args.save_file)

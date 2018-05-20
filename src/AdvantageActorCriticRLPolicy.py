@@ -13,23 +13,26 @@ __author__ = 'aishwarya'
 class AdvantageActorCriticRLPolicy(ParallelRLPolicy):
     def __init__(self, save_file, on_topic, classifier_manager, model_type, separate_guess_predictor, gamma,
                  candidate_questions_beam_size, min_prob_weight, max_prob_weight, max_prob_kappa,
-                 initial_guess_predictor, ablate_feature, alpha):
+                 initial_guess_predictor, ablate_feature, ablate_feature_group, alpha):
         super(AdvantageActorCriticRLPolicy, self).__init__(save_file, on_topic, classifier_manager, model_type,
                                                            separate_guess_predictor, gamma,
                                                            candidate_questions_beam_size, min_prob_weight,
                                                            max_prob_weight, max_prob_kappa, initial_guess_predictor,
-                                                           ablate_feature)
+                                                           ablate_feature, ablate_feature_group)
 
         if separate_guess_predictor:
-            if ablate_feature is None:
-                self.num_features = 13
-            else:
-                self.num_features = 12
+            self.num_features = 13
         else:
-            if ablate_feature is None:
-                self.num_features = 26
+            self.num_features = 25
+        if self.ablate_feature is not None:
+            self.num_features -= 1
+        if self.ablate_feature_group == 'query':
+            self.num_features -= 7
+        elif self.ablate_feature_group == 'guess':
+            if separate_guess_predictor:
+                self.num_features -= 1
             else:
-                self.num_features = 25
+                self.num_features -= 13
         # print 'ablate_feature =', ablate_feature, ', self.num_features =', self.num_features
 
         self.policy_weights = self.get_zero_vector(self.num_features)
@@ -102,7 +105,11 @@ class AdvantageActorCriticRLPolicy(ParallelRLPolicy):
     def perform_updates(self, updates):
         super(AdvantageActorCriticRLPolicy, self).perform_updates(updates)
         for update in updates:
-            self.policy_weights = self.policy_weights + update['is_weight'] * self.alpha * update['z'] * update['td_error']
+            if 'is_weight' in update:
+                self.policy_weights = self.policy_weights + update['is_weight'] * self.alpha * update['z'] \
+                                                            * update['td_error']
+            else:
+                self.policy_weights = self.policy_weights + self.alpha * update['z'] * update['td_error']
 
 
 if __name__ == '__main__':
@@ -127,6 +134,8 @@ if __name__ == '__main__':
                             help='Kappa at which distribution peaks')
     arg_parser.add_argument('--ablate-feature', type=int, default=None,
                             help='Ablate this feature idx')
+    arg_parser.add_argument('--ablate-feature-group', type=str, default=None,
+                            help='query or guess')
     arg_parser.add_argument('--save-file', type=str, required=True,
                             help='File to save pickled policy')
 
@@ -141,5 +150,5 @@ if __name__ == '__main__':
     policy = AdvantageActorCriticRLPolicy(args.save_file, args.on_topic, None, args.model_type, False,
                                           args.gamma, args.candidate_questions_beam_size, args.min_prob_weight,
                                           args.max_prob_weight, args.max_prob_kappa, None,
-                                          args.ablate_feature, args.alpha)
+                                          args.ablate_feature, args.ablate_feature_group, args.alpha)
     policy.save()

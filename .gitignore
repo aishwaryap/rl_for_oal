@@ -1,3 +1,4 @@
 src/*.pyc
 scripts/*
 logs/*
+extra_code/*.pyc

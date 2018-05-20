@@ -16,12 +16,12 @@ class ParallelRLPolicyWithLogging(ParallelRLPolicy):
     # This should have the same classifier manager as the dialog agent
     def __init__(self, save_file, on_topic, classifier_manager, model_type, separate_guess_predictor, gamma,
                  candidate_questions_beam_size, min_prob_weight, max_prob_weight, max_prob_kappa,
-                 initial_guess_predictor=None, ablate_feature=None):
+                 initial_guess_predictor=None, ablate_feature=None, ablate_feature_group=None):
         super(ParallelRLPolicyWithLogging, self).__init__(save_file, on_topic, classifier_manager, model_type,
                                                           separate_guess_predictor, gamma,
                                                           candidate_questions_beam_size, min_prob_weight,
                                                           max_prob_weight, max_prob_kappa, initial_guess_predictor,
-                                                          ablate_feature)
+                                                          ablate_feature, ablate_feature_group)
 
     def compute_update(self, prev_dialog_state, next_action, next_dialog_state, reward):
         current_state_candidate_actions = self.get_candidate_actions(prev_dialog_state)
@@ -76,6 +76,8 @@ if __name__ == '__main__':
                             help='Kappa at which distribution peaks')
     arg_parser.add_argument('--ablate-feature', type=int, default=None,
                             help='Ablate this feature idx')
+    arg_parser.add_argument('--ablate-feature-group', type=str, default=None,
+                            help='query or guess')
     arg_parser.add_argument('--save-file', type=str, required=True,
                             help='File to save pickled policy')
 
@@ -89,5 +91,5 @@ if __name__ == '__main__':
     policy = ParallelRLPolicyWithLogging(args.save_file, args.on_topic, None, args.model_type,
                                          args.separate_guess_predictor, args.gamma, args.candidate_questions_beam_size,
                                          args.min_prob_weight, args.max_prob_weight, args.max_prob_kappa,
-                                         initial_guess_predictor, args.ablate_feature)
+                                         initial_guess_predictor, args.ablate_feature, args.ablate_feature_group)
     policy.save()

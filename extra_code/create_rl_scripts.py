@@ -176,6 +176,7 @@ def main():
                                                    + '_test.sh\'\n')
 
         script_num += 1
+        print script_num
 
     for idx in range(4):
         create_policies_files[idx].close()

@@ -13,23 +13,28 @@ __author__ = 'aishwarya'
 class ReinforceRLPolicy(ParallelRLPolicy):
     def __init__(self, save_file, on_topic, classifier_manager, separate_guess_predictor, gamma,
                  candidate_questions_beam_size, min_prob_weight, max_prob_weight, max_prob_kappa,
-                 initial_guess_predictor, ablate_feature, alpha):
+                 initial_guess_predictor, ablate_feature, ablate_feature_group, alpha):
         super(ReinforceRLPolicy, self).__init__(save_file, on_topic, classifier_manager, 'linear',
                                                 separate_guess_predictor, gamma, candidate_questions_beam_size,
                                                 min_prob_weight, max_prob_weight, max_prob_kappa,
-                                                initial_guess_predictor, ablate_feature)
+                                                initial_guess_predictor, ablate_feature, ablate_feature_group)
 
         if separate_guess_predictor:
-            if ablate_feature is None:
-                self.num_features = 13
-            else:
-                self.num_features = 12
+            self.num_features = 13
         else:
-            if ablate_feature is None:
-                self.num_features = 26
+            self.num_features = 26
+        if self.ablate_feature is not None:
+            self.num_features -= 1
+        if self.ablate_feature_group == 'query':
+            self.num_features -= 7
+        elif self.ablate_feature_group == 'guess':
+            if separate_guess_predictor:
+                self.num_features -= 1
             else:
-                self.num_features = 25
-        # print 'ablate_feature =', ablate_feature, ', self.num_features =', self.num_features
+                self.num_features -= 13
+        print 'separate_guess_predictor = ', str(separate_guess_predictor)
+        print 'self.ablate_feature_group = ', str(self.ablate_feature_group)
+        print 'ablate_feature =', ablate_feature, ', self.num_features =', self.num_features
 
         self.policy_weights = self.get_zero_vector(self.num_features)
         self.alpha = alpha
@@ -84,7 +89,10 @@ class ReinforceRLPolicy(ParallelRLPolicy):
             # print '(update['r'] - R) =', (update['r'] - R)
             # print '(1.0 / t + 1) = ', (1.0 / t + 1)
             # print '(1.0 / t + 1) * (update['r'] - R) =', (1.0 / t + 1) * (update['r'] - R)
-            R += (1.0 / (t + 1)) * update['is_weight'] * (update['r'] - R)
+            if 'is_weight' in update:
+                R += (1.0 / (t + 1)) * update['is_weight'] * (update['r'] - R)
+            else:
+                R += (1.0 / (t + 1)) * (update['r'] - R)
             # print 'After update R =', R
             t += 1
             if update['episode_end']:
@@ -116,6 +124,8 @@ if __name__ == '__main__':
                             help='Kappa at which distribution peaks')
     arg_parser.add_argument('--ablate-feature', type=int, default=None,
                             help='Ablate this feature idx')
+    arg_parser.add_argument('--ablate-feature-group', type=str, default=None,
+                            help='query or guess')
     arg_parser.add_argument('--save-file', type=str, required=True,
                             help='File to save pickled policy')
 
@@ -132,5 +142,5 @@ if __name__ == '__main__':
     policy = ReinforceRLPolicy(args.save_file, args.on_topic, None, False,
                                args.gamma, args.candidate_questions_beam_size, args.min_prob_weight,
                                args.max_prob_weight, args.max_prob_kappa, None,
-                               args.ablate_feature, args.alpha)
+                               args.ablate_feature, args.ablate_feature_group, args.alpha)
     policy.save()

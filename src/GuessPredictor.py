@@ -20,15 +20,15 @@ class GuessPredictor:
             'Max kappa in current predicates',
             'Second max kappa in current predicates',
             'Avg kappa in current predicates',
-            'Positive score (normalized) of top region',
-            'Positive score (normalized) of second best region',
-            'Avg positive score (normalized) of regions',
+            'Score (normalized) of top region',
+            'Difference between scores of top and second highest region',
+            'Difference between top score and avg score',
             'Decision of top classifier for top region',
+            'Is decision of top classifier for second best region same as that of top region? (0-1)',
             'Decision of second best classifier for top region',
-            'Decision of top classifier for second best region',
-            'Decision of second best classifier for second best region',
-            'Avg decision of top classifier',
-            'Avg decision of second best classifier'
+            'Is decision of second best classifier for second best region same as that of top region? (0-1)',
+            'Difference between decision of top classifier for top region and avg decision of the classifier',
+            'Difference between decision of second best classifier for top region and avg decision of the classifier'
         ]
 
         self.fitted = False
@@ -182,11 +182,7 @@ class GuessPredictor:
             feature_vectors = feature_vectors.reshape(1, -1)
         target_values = np.array([update['guess_predictor_target'] for update in updates])
 
-        if 'is_weight' in updates[0]:
-            sample_weights = [update['is_weight'] for update in updates]
-            self.predictor.partial_fit(feature_vectors, target_values, sample_weight=sample_weights)
-        else:
-            self.predictor.partial_fit(feature_vectors, target_values)
+        self.predictor.partial_fit(feature_vectors, target_values)
         self.fitted = True
 
     def get_guess_success_prob(self, dialog_state):
