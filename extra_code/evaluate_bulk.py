@@ -8,6 +8,9 @@ from scipy.stats import ttest_ind
 import operator
 
 
+def get_avg(l):
+    return sum(l) / float(len(l))
+
 def main(args):
     if args.submit_file is not None:
         with open(args.submit_file) as handle:
@@ -24,7 +27,7 @@ def main(args):
         print 'No agent list provided'
         return
 
-    if args.script_type == 'test':
+    if args.agent_list_file is None and args.script_type == 'test':
         baselines = ['static_test', 'static2_test', 'static_ontopic_test']
     else:
         baselines = ['static', 'static2', 'static_ontopic']
@@ -35,6 +38,11 @@ def main(args):
     final_batches = dict()
     improved = list()
     trending_improved = list()
+
+    all_frac_label_queries = dict()
+    all_frac_example_queries = dict()
+    all_frac_ontopic_queries = dict()
+    all_frac_opportunistic_queries = dict()    
 
     num_batches_file = open(args.num_batches_file, 'w')
     num_batches_writer = csv.writer(num_batches_file, delimiter=',')
@@ -47,7 +55,10 @@ def main(args):
 
     for agent_name in agent_names:
         print 'agent name =', agent_name
-        dialog_stats_file = os.path.join(*[args.agents_path, agent_name, args.script_type + '_stats.txt'])
+        if args.agent_list_file is not None and args.script_type == 'test':
+            dialog_stats_file = os.path.join(*[args.agents_path, agent_name + '_test', args.script_type + '_stats.txt'])
+        else:
+            dialog_stats_file = os.path.join(*[args.agents_path, agent_name, args.script_type + '_stats.txt'])
         print dialog_stats_file
 
         if not os.path.isfile(dialog_stats_file):
@@ -73,6 +84,11 @@ def main(args):
         first_batch = None
         last_batch = None
 
+        frac_label_queries = list()
+        frac_example_queries = list()
+        frac_ontopic_queries = list()
+        frac_opportunistic_queries = list()
+
         for batch_num in range(num_batches):
             start = batch_num * args.averaging_beam
             end = (batch_num + 1) * args.averaging_beam
@@ -87,6 +103,12 @@ def main(args):
             print 'agent_name =', agent_name, ', batch_stats:',len(batch_stats)
             avg_success.append(sum([float(stats[3]) for stats in batch_stats]) / float(args.averaging_beam))
             avg_len.append(sum([float(stats[4]) for stats in batch_stats]) / float(args.averaging_beam))
+
+            if len(stats) > 5:
+                frac_label_queries.append(get_avg([float(stats[5]) / (float(stats[5]) + float(stats[6]) + 0.000001) for stats in batch_stats]))
+                frac_example_queries.append(get_avg([float(stats[6]) / (float(stats[5]) + float(stats[6]) + 0.000001) for stats in batch_stats]))
+                frac_ontopic_queries.append(get_avg([float(stats[7]) / (float(stats[7]) + float(stats[8]) + 0.000001) for stats in batch_stats]))
+                frac_opportunistic_queries.append(get_avg([float(stats[8]) / (float(stats[7]) + float(stats[8]) + 0.000001) for stats in batch_stats]))
 
         if first_batch is not None and last_batch is not None:
             print 'first_batch =', first_batch
@@ -103,6 +125,11 @@ def main(args):
 
         all_avg_success[agent_name] = avg_success
         all_avg_len[agent_name] = avg_len
+
+        all_frac_label_queries[agent_name] = frac_label_queries
+        all_frac_example_queries[agent_name] = frac_example_queries
+        all_frac_ontopic_queries[agent_name] = frac_ontopic_queries
+        all_frac_opportunistic_queries[agent_name] = frac_opportunistic_queries
 
     num_batches_file.close()
 
@@ -148,6 +175,34 @@ def main(args):
             row = [agent_name] + avg_len
             writer.writerow(row)
 
+    output_list = [(agent_name, all_frac_label_queries[agent_name]) for (agent_name, avg_success) in success_list]
+    with open(args.output_dir + 'frac_label_queries.csv', 'w') as handle:
+        writer = csv.writer(handle, delimiter=',')
+        for (agent_name, output) in output_list:
+            row = [agent_name] + output
+            writer.writerow(row)
+
+    output_list = [(agent_name, all_frac_example_queries[agent_name]) for (agent_name, avg_success) in success_list]
+    with open(args.output_dir + 'frac_example_queries.csv', 'w') as handle:
+        writer = csv.writer(handle, delimiter=',')
+        for (agent_name, output) in output_list:
+            row = [agent_name] + output
+            writer.writerow(row)
+
+    output_list = [(agent_name, all_frac_ontopic_queries[agent_name]) for (agent_name, avg_success) in success_list]
+    with open(args.output_dir + 'frac_ontopic_queries.csv', 'w') as handle:
+        writer = csv.writer(handle, delimiter=',')
+        for (agent_name, output) in output_list:
+            row = [agent_name] + output
+            writer.writerow(row)
+
+    output_list = [(agent_name, all_frac_opportunistic_queries[agent_name]) for (agent_name, avg_success) in success_list]
+    with open(args.output_dir + 'frac_opportunistic_queries.csv', 'w') as handle:
+        writer = csv.writer(handle, delimiter=',')
+        for (agent_name, output) in output_list:
+            row = [agent_name] + output
+            writer.writerow(row)
+
 
 if __name__ == '__main__':
     arg_parser = ArgumentParser()
@@ -170,6 +225,8 @@ if __name__ == '__main__':
                             help='File to write p values of agent improvement')
     arg_parser.add_argument('--p-values-baseline-file', type=str, default=None,
                             help='File to write p values of comparison with baseline')
+    arg_parser.add_argument('--output-dir', type=str, default='../logs/',
+                            help='Dir to write output files')
 
     arg_parser.add_argument('--num-batches-file', type=str, default=None,
                             help='File to write number of batches per agent')
