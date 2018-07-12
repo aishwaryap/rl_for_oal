@@ -181,7 +181,7 @@ class AbstractPolicy(object):
                     questions = [possible_questions[idx] for idx in chosen_question_indices]
                 # print '\t\t\tquestions =', questions
 
-        question_actions = [{'action' : 'ask_label', 'predicate': predicate, 'region' : region}
+        question_actions = [{'action': 'ask_label', 'predicate': predicate, 'region': region}
                             for (predicate, region) in questions]
 
         # print '\n Label question candidates:', question_actions, '\n'

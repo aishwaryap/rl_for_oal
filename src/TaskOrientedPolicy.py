@@ -21,14 +21,14 @@ class TaskOrientedPolicy(AbstractPolicy):
                 labelled_regions = set()
                 if predicate in dialog_state['labels_acquired']:
                     labelled_regions = set([region for (region, label) in dialog_state['labels_acquired'][predicate]])
-                unlabelled_regions = [region for region in dialog_state['candidate_regions']
+                unlabelled_regions = [region for region in dialog_state['active_train_regions']
                                       if region not in labelled_regions]
                 if len(unlabelled_regions) > 0:
                     next_action = {'action': 'ask_label', 'predicate': predicate, 'region': unlabelled_regions[0]}
                     return next_action
 
         # If control reaches here, no question was found, so make a guess
-        scores = np.zeros(len(dialog_state['candidate_regions']))
+        scores = np.zeros(len(dialog_state['active_test_regions']))
         for predicate in dialog_state['current_predicates']:
             if dialog_state['current_kappas'][predicate] < self.kappa_threshold:
                 for (idx, region) in enumerate(dialog_state['candidate_regions']):
