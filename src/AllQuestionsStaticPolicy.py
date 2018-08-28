@@ -24,7 +24,7 @@ class AllQuestionsStaticPolicy(AbstractPolicy):
         self.on_topic = on_topic
 
     def get_next_action(self, dialog_state):
-        for predicate in dialog_state['current_predicates']:
+        for predicate in dialog_state['seen_predicates']:
             unlabaled_regions = self.get_label_question_regions(predicate, dialog_state)
             if len(unlabaled_regions) > 0:
                 next_action = {'action': 'ask_label', 'predicate': predicate,

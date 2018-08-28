@@ -7,4 +7,5 @@ Project Goals -
 # Dependencies
 
 Download and preprocess the Visual Genome dataset using - https://github.com/aishwaryap/dataset_preprocessing
+Instructions are present at [dataset_preprocessing/VisualGenome/README.md](https://github.com/aishwaryap/dataset_preprocessing/blob/master/VisualGenome/README.md)
 

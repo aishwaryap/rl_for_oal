@@ -10,6 +10,7 @@ import pickle
 
 # Imports for unpickling
 from StaticPolicy import StaticPolicy
+from AllQuestionsStaticPolicy import AllQuestionsStaticPolicy
 from ParallelRLPolicy import ParallelRLPolicy
 from TaskOrientedPolicy import TaskOrientedPolicy
 from ReinforceRLPolicy import ReinforceRLPolicy
