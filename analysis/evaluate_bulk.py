@@ -28,9 +28,11 @@ def main(args):
         return
 
     if args.agent_list_file is None and args.script_type == 'test':
-        baselines = ['static_test', 'static2_test', 'static_ontopic_test']
+        # baselines = ['static_test', 'static2_test', 'static_ontopic_test']
+        baselines = ['static_test']
     else:
-        baselines = ['static', 'static2', 'static_ontopic']
+        # baselines = ['static', 'static2', 'static_ontopic']
+        baselines = ['static']
     agent_names = agent_names + baselines
 
     all_avg_success = dict()

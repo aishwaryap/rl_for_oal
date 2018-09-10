@@ -1,3 +1,4 @@
 AGENT_NAME=$1
+BASE_DIR=$2
 
-rm -rf /scratch/cluster/aish/rl_for_oal/$AGENT_NAME/
+rm -rf $BASE_DIR/$AGENT_NAME/
